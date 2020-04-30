@@ -4,11 +4,29 @@ import aiohttp
 from threading import Thread
 import time
 
-class Bot(Thread):
+class Utility:
+
+	def get_self_user(self):
+		return User(asyncio.run(self.api_call(f"/users/@me", "GET")))
+
+	def get_self_guilds(self):
+		return [Guild(guild,self) for guild in asyncio.run(self.api_call(f"/users/@me/guilds", "GET"))]
+
+	def send_message(self,channel,content):
+		print(channel,content)
+		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json={"content": content})),self)
+
+	def get_guild(self,guild_id):
+		return Guild(asyncio.run(self.api_call(f"/guilds/{guild_id}","GET")),self)
+
+	def get_channel(self,channel_id):
+		return Channel(asyncio.run(self.api_call(f"/channels/{channel_id}","GET")),self)
+
+class Bot(Thread,Utility):
 
 	def __init__(self,token):
-		super().__init__()
-		self.utility = Utility(self)
+		Thread.__init__(self)
+		Utility.__init__(self)
 		self.token=token
 		self.url="https://discordapp.com/api"
 		self.__last_sequence = ""
@@ -87,27 +105,13 @@ class Bot(Thread):
 				except:...
 		except:...
 
-class Utility():
-
-	def __init__(self,bot):
-		self.bot = bot
-
-	def send_message(self,channel,content):
-		return Message(asyncio.run(self.bot.api_call(f"/channels/{channel}/messages", "POST", json={"content": content})),self.bot)
-
-	def get_guild(self,guild_id):
-		return Guild(asyncio.run(self.bot.api_call(f"/guilds/{guild_id}","GET")),self.bot)
-
-	def get_channel(self,channel_id):
-		return Channel(asyncio.run(self.bot.api_call(f"/channels/{channel_id}","GET")),self.bot)
-
 class Guild:
 
 	def __init__(self, guild, bot):
 		self.id = guild["id"]
 		self.name = guild["name"]
-		self.description = guild["description"]
-		self.emojis = [Emoji(emoji) for emoji in guild["emojis"]]
+		#self.description = guild["description"]
+		#self.emojis = [Emoji(emoji) for emoji in guild["emojis"]]
 		self.__bot = bot
 
 	def get_channels(self):
@@ -142,7 +146,7 @@ class Message:
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","PATCH",json={"content": content}))
 
 	def add_reaction(self, reaction):
-		print(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT")))
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
 
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions","DELETE"))
