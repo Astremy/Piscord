@@ -3,6 +3,10 @@ from SAPAS import *
 
 bot = Bot("Token")
 
+@bot.event("on_ready")
+def on_ready(user):
+	print(f"Bot {user.name} Connected !")
+
 @bot.event("on_message")
 def on_message(message):
 	if message.content == "Ping !":
