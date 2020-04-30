@@ -12,6 +12,14 @@ class Bot(Thread):
 		self.token=token
 		self.url="https://discordapp.com/api"
 		self.__last_sequence = ""
+		self.events = {}
+
+	def event(self,arg):
+		def add_event(function):
+			self.events[arg]=function
+			def truc():...
+			return truc
+		return add_event
 
 	async def api_call(self,path, method="GET", **kwargs):
 		defaults = {
@@ -33,6 +41,7 @@ class Bot(Thread):
 		await self.__main(response["url"])
 
 	async def __main(self,url):
+		events = {"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction]}
 		async with aiohttp.ClientSession() as session:
 			async with session.ws_connect(f"{url}?v=6&encoding=json") as ws:
 				async for msg in ws:
@@ -48,16 +57,12 @@ class Bot(Thread):
 								"compress": False,
 								"large_threshold": 250
 						}})
-					elif data["op"] == 11:
-						pass
 					elif data["op"] == 0:
-						if data["t"]=="MESSAGE_CREATE":
-							if data["d"]["content"]=="Test":
-								await self.api_call(f"/channels/{data['d']['channel_id']}/messages","POST", json={"content": "Hello !"})
-							else:
-								print(data["t"],data["d"])
-						if data["t"] == "MESSAGE_REACTION_ADD":
-							print(data["t"],data["d"])
+						if data["t"] in events:
+							event = events[data["t"]]
+							if event[0] in self.events:
+								x = Thread(target=self.events[event[0]],args=(event[1](data["d"],self),))
+								x.start()
 						self.__last_sequence=data["s"]
 
 	async def __heartbeat(self,ws, interval):
@@ -82,7 +87,7 @@ class Bot(Thread):
 				except:...
 		except:...
 
-class Utility:
+class Utility():
 
 	def __init__(self,bot):
 		self.bot = bot
@@ -137,7 +142,7 @@ class Message:
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","PATCH",json={"content": content}))
 
 	def add_reaction(self, reaction):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
+		print(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT")))
 
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions","DELETE"))
@@ -149,8 +154,7 @@ class User:
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
-		self.bot = user["bot"]
-		self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
+		#self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
 
 class Reaction:
 
@@ -158,11 +162,12 @@ class Reaction:
 		self.user = User(reaction["member"]["user"])
 		self.channel = reaction["channel_id"]
 		self.guild = reaction["guild_id"]
+		self.emoji = Emoji(reaction["emoji"])
 		self._message = reaction["message_id"]
 		self.__bot = bot
 
 	def get_message(self):
-		return Message(self.__bot.api_call(f"/channels/{self.channel}/messages/{self._message}"),self.__bot)
+		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self._message}")),self.__bot)
 
 class Emoji:
 
