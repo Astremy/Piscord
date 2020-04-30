@@ -13,7 +13,6 @@ class Utility:
 		return [Guild(guild,self) for guild in asyncio.run(self.api_call(f"/users/@me/guilds", "GET"))]
 
 	def send_message(self,channel,content):
-		print(channel,content)
 		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json={"content": content})),self)
 
 	def get_guild(self,guild_id):
@@ -59,7 +58,7 @@ class Bot(Thread,Utility):
 		await self.__main(response["url"])
 
 	async def __main(self,url):
-		events = {"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction]}
+		events = {"READY":["on_ready",(lambda x,y:User(x["user"]))],"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction]}
 		async with aiohttp.ClientSession() as session:
 			async with session.ws_connect(f"{url}?v=6&encoding=json") as ws:
 				async for msg in ws:
@@ -154,7 +153,7 @@ class Message:
 
 class User:
 
-	def __init__(self,user):
+	def __init__(self, user):
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
