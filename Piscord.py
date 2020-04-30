@@ -26,7 +26,7 @@ class Bot(Thread):
 				try:
 					assert 200 == response.status, response.reason
 					return await response.json()
-				except:return...
+				except:...
 
 	async def begin(self):
 		response = await self.api_call("/gateway")
