@@ -7,10 +7,10 @@ import time
 class Utility:
 
 	def get_self_user(self):
-		return User(asyncio.run(self.api_call(f"/users/@me", "GET")))
+		return User(asyncio.run(self.api_call("/users/@me", "GET")))
 
 	def get_self_guilds(self):
-		return [Guild(guild,self) for guild in asyncio.run(self.api_call(f"/users/@me/guilds", "GET"))]
+		return [Guild(guild,self) for guild in asyncio.run(self.api_call("/users/@me/guilds", "GET"))]
 
 	def send_message(self,channel,content):
 		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json={"content": content})),self)
@@ -27,7 +27,7 @@ class Bot(Thread,Utility):
 		Thread.__init__(self)
 		Utility.__init__(self)
 		self.token=token
-		self.url="https://discordapp.com/api"
+		self.api="https://discordapp.com/api"
 		self.__last_sequence = ""
 		self.events = {}
 
@@ -47,7 +47,7 @@ class Bot(Thread,Utility):
 		}
 		kwargs = dict(defaults, **kwargs)
 		async with aiohttp.ClientSession() as session:
-			async with session.request(method, self.url+path,**kwargs) as response:
+			async with session.request(method, self.api+path,**kwargs) as response:
 				try:
 					assert 200 == response.status, response.reason
 					return await response.json()
@@ -104,13 +104,52 @@ class Bot(Thread,Utility):
 				except:...
 		except:...
 
+class OAuth:
+
+	def __init__(self, bot, secret, redirect_uri, scope):
+		self.bot = bot
+		self.secret = secret
+		self.id = bot.get_self_user().id
+		self.redirect_uri = redirect_uri
+		self.scope = scope
+
+	def get_url(self):
+		return f"https://discordapp.com/api/oauth2/authorize?client_id={self.id}&redirect_uri={self.redirect_uri}&response_type=code&scope={'%20'.join(self.scope.split())}"
+
+	def get_token(self, code):
+		data = {
+			"client_id": self.id,
+			"client_secret": self.secret,
+			"grant_type": "authorization_code",
+			"code": code,
+			"redirect_uri": self.redirect_uri,
+			"scope": self.scope
+		}
+
+		return asyncio.run(self.bot.api_call("/oauth2/token","POST",data=data))
+
+	def __request_token(self,token,url):
+		headers = {
+			"Authorization": f"Bearer {json.loads(token)['access_token']}"
+		}
+
+		return asyncio.run(self.bot.api_call(url,"GET",headers=headers))
+
+	def get_user(self,token):
+		if "identify" in self.scope or "identify" in self.scope:
+			return User(self.__request_token(token,"/users/@me"))
+		return "Invalid Scope"
+
+	def get_guilds(self,token):
+		if "guilds" in self.scope:
+			return [Guild(guild,self.bot) for guild in self.__request_token(token,"/users/@me/guilds")]
+		return "Invalid Scope"
+
 class Guild:
 
 	def __init__(self, guild, bot):
 		self.id = guild["id"]
 		self.name = guild["name"]
-		#self.description = guild["description"]
-		#self.emojis = [Emoji(emoji) for emoji in guild["emojis"]]
 		self.__bot = bot
 
 	def get_channels(self):
@@ -157,7 +196,6 @@ class User:
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
-		#self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
 
 class Reaction:
 
