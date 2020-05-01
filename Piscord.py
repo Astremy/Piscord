@@ -148,6 +148,7 @@ class OAuth:
 class Guild:
 
 	def __init__(self, guild, bot):
+		self.data = guild
 		self.id = guild["id"]
 		self.name = guild["name"]
 		self.__bot = bot
@@ -163,6 +164,7 @@ class Guild:
 class Channel:
 
 	def __init__(self,channel,bot):
+		self.data = channel
 		self.id = channel["id"]
 		self.type = channel["type"]
 		self.name = channel["name"]
@@ -182,6 +184,7 @@ class Channel:
 class Message:
 
 	def __init__(self, message, bot):
+		self.data = message
 		self.id = message["id"]
 		self.content = message["content"]
 		self.channel = message["channel_id"]
@@ -204,6 +207,7 @@ class Message:
 class User:
 
 	def __init__(self, user):
+		self.data=user
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
@@ -211,6 +215,7 @@ class User:
 class Reaction:
 
 	def __init__(self,reaction,bot):
+		self.data=reaction
 		self.user = User(reaction["member"]["user"])
 		self.channel = reaction["channel_id"]
 		self.guild = reaction["guild_id"]
@@ -224,5 +229,6 @@ class Reaction:
 class Emoji:
 
 	def __init__(self,emoji):
+		self.data = emoji
 		self.name = emoji["name"]
 		self.id = emoji["id"]
