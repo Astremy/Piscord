@@ -165,7 +165,7 @@ class Channel:
 		self._guild = channel["guild_id"]
 		self.__bot = bot
 
-	def edit(self,modifs):
+	def edit(self,modifs**):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
 
 class Message:
@@ -180,8 +180,8 @@ class Message:
 	def delete(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","DELETE"))
 
-	def edit(self,content):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","PATCH",json={"content": content}))
+	def edit(self,**modifs):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","PATCH",json=modifs))
 
 	def add_reaction(self, reaction):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
