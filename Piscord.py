@@ -165,7 +165,7 @@ class Channel:
 		self._guild = channel["guild_id"]
 		self.__bot = bot
 
-	def edit(self,modifs**):
+	def edit(self,**modifs):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
 
 class Message:
