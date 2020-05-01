@@ -4,6 +4,15 @@ import aiohttp
 from threading import Thread
 import time
 
+events_list = []
+
+def def_event(event):
+	def add_event(function):
+		events_list.append({event:[function.__name__,function]})
+		def thing():...
+		return thing
+	return add_event
+
 class Utility:
 
 	def get_self_user(self):
@@ -21,15 +30,60 @@ class Utility:
 	def get_channel(self,channel_id):
 		return Channel(asyncio.run(self.api_call(f"/channels/{channel_id}","GET")),self)
 
-class Bot(Thread,Utility):
+	def get_user(self,user_id):
+		return User(asyncio.run(self.api_call(f"/users/{user_id}")))
+
+class Events:
+	def __init__(self):
+		
+		@self.def_event("MESSAGE_CREATE","on_message")
+		class Event(Message):
+
+			def __init__(self, bot, data):
+				Message.__init__(self, data, bot)
+
+		@self.def_event("READY","on_ready")
+		class Event(User):
+
+			def __init__(self, bot, data):
+				self.version = data["v"]
+				User.__init__(self, data["user"])
+
+		@self.def_event("MESSAGE_REACTION_ADD","reaction_add")
+		class Event(Member):
+
+			def __init__(self,bot,data):
+				Member.__init__(self,reaction["member"])
+				self.emoji = Emoji(reaction["emoji"])
+				self.channel_id = reaction["channel_id"]
+				self.guild = reaction["guild_id"]
+				self.message_id = reaction["message_id"]
+				self.__bot = bot
+
+			def get_message(self):
+				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
+
+	def get_message(self):
+		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self._message}")),self.__bot)
+
+class Bot(Thread,Utility,Events):
 
 	def __init__(self,token):
+		self.events_list = {}
+		Events.__init__(self)
 		Thread.__init__(self)
 		Utility.__init__(self)
 		self.token=token
 		self.api="https://discordapp.com/api"
 		self.__last_sequence = ""
 		self.events = {}
+
+	def def_event(self,event,name):
+		def add_event(function):
+			self.events_list[event] = [name,function]
+			def thing():...
+			return thing
+		return add_event
 
 	def event(self,arg):
 		def add_event(function):
@@ -58,7 +112,7 @@ class Bot(Thread,Utility):
 		await self.__main(response["url"])
 
 	async def __main(self,url):
-		events = {"READY":["on_ready",(lambda x,y:User(x["user"]))],"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction],"CHANNEL_CREATE":["channel_create",Channel]}
+		events = self.events_list
 		async with aiohttp.ClientSession() as session:
 			async with session.ws_connect(f"{url}?v=6&encoding=json") as ws:
 				async for msg in ws:
@@ -78,7 +132,7 @@ class Bot(Thread,Utility):
 						if data["t"] in events:
 							event = events[data["t"]]
 							if event[0] in self.events:
-								x = Thread(target=self.events[event[0]],args=(event[1](data["d"],self),))
+								x = Thread(target=self.events[event[0]],args=(event[1](self,data["d"]),))
 								x.start()
 						self.__last_sequence=data["s"]
 
@@ -148,7 +202,6 @@ class OAuth:
 class Guild:
 
 	def __init__(self, guild, bot):
-		self.data = guild
 		self.id = guild["id"]
 		self.name = guild["name"]
 		self.__bot = bot
@@ -164,11 +217,26 @@ class Guild:
 class Channel:
 
 	def __init__(self,channel,bot):
-		self.data = channel
 		self.id = channel["id"]
 		self.type = channel["type"]
-		self.name = channel["name"]
-		self._guild = channel["guild_id"]
+		self.guild_id = channel.get("guild_id",None)
+		self.position = channel.get("position",None)
+		self.permission_overwrites = channel.get("permission_overwrites",None) #Object
+		self.name = channel.get("name",None)
+		self.topic = channel.get("topic",None)
+		self.nsfw = channel.get("nsfw",None)
+		self.last_message_id = channel.get("last_message_id",None)
+		self.bitrate = channel.get("bitrate",None)
+		self.user_limit = channel.get("user_limit",None)
+		self.rate_limit_per_user = channel.get("rate_limit_per_user",None)
+		self.recipients = channel.get("recipients",None)
+		if "recipients" in channel:
+			self.recipients = [User(user) for user in channel["recipients"]]
+		self.icon = channel.get("icon",None)
+		self.owner_id = channel.get("owner_id",None)
+		self.application_id = channel.get("application_id",None)
+		self.parent_id = channel.get("parent_id",None)
+		self.last_pin_timestamp = channel.get("last_pin_timestamp",None)
 		self.__bot = bot
 
 	def edit(self,**modifs):
@@ -184,11 +252,35 @@ class Channel:
 class Message:
 
 	def __init__(self, message, bot):
-		self.data = message
 		self.id = message["id"]
-		self.content = message["content"]
-		self.channel = message["channel_id"]
+		self.channel_id = message["channel_id"]
+		self.guild_id = message.get("guild_id",None)
 		self.author = User(message["author"])
+		if "member" in message:
+			self.member = Member(message["member"])
+		self.content = message["content"]
+		self.timestamp = message["timestamp"]
+		self.edited_timestamp = message.get("edited_timestamp",None)
+		self.tts = message["tts"]
+		self.mention_everyone = message["mention_everyone"]
+		self.mentions = [User(mention) for mention in message["mentions"]]
+		self.mentions_roles = [Role(role) for role in message["mention_roles"]]
+		self.mention_channels = []
+		if "mention_channels" in message:
+			self.mention_channels = [Channel(channel,bot) for channel in message["mention_channels"]]
+		self.attachments = [Attachment(attachment) for attachment in message["attachments"]]
+		self.embeds = [Embed(embed) for embed in message["embeds"]]
+		self.reactions = []
+		if "reactions" in message:
+			self.reactions = [Reaction(reaction) for reaction in message["reactions"]]
+		self.nonce = message.get("nonce",None)
+		self.pinned = message["pinned"]
+		self.webhook_id = message.get("webhook_id",None)
+		self.type = message["type"]
+		self.activity = message.get("activity",None) # Object
+		self.application = message.get("application",None) #Object
+		self.message_reference = message.get("message_reference",None) #Object
+		self.flags = message.get("flags",None)
 		self.__bot = bot
 
 	def delete(self):
@@ -203,32 +295,85 @@ class Message:
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions","DELETE"))
 
-
-class User:
+class User(Member):
 
 	def __init__(self, user):
-		self.data=user
+		if "member" in user:
+			Member.__init__(self,user["member"])
+		self.system = user.get("system",None)
+		self.mfa_enabled = user.get("mfa_enabled",None)
+		self.locale = user.get("locale",None)
+		self.verified = user.get("verified",None)
+		self.email = user.get("email",None)
+		self.flags = user.get("flags",None)
+		self.premium_type = user.get("premium_type",None)
+		self.public_flags = user.get("public_flags",None)
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
+		self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
+
+class Member(User):
+
+	def __init__(self, member):
+		if "user" in member:
+			User.__init__(self,member["user"])
+		self.premium_since = member.get("premium_since",None)
+		self.roles = [Role(role) for role in member["roles"]]
+		self.mute = member["mute"]
+		self.deaf = member["deaf"]
+		self.nick = member.get("nick",None)
+		self.joined_at = member["joined_at"]
 
 class Reaction:
 
-	def __init__(self,reaction,bot):
-		self.data=reaction
-		self.user = User(reaction["member"]["user"])
-		self.channel = reaction["channel_id"]
-		self.guild = reaction["guild_id"]
+	def __init__(self,reaction):
+		self.count = reaction["count"]
+		self.me = reaction["me"]
 		self.emoji = Emoji(reaction["emoji"])
-		self._message = reaction["message_id"]
-		self.__bot = bot
-
-	def get_message(self):
-		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self._message}")),self.__bot)
 
 class Emoji:
 
 	def __init__(self,emoji):
-		self.data = emoji
 		self.name = emoji["name"]
 		self.id = emoji["id"]
+
+class Role:
+
+	def __init__(self,role):
+		self.id = role["id"]
+		self.name = role["name"]
+		self.color = role["color"]
+		self.hoist = role["hoist"]
+		self.position = role["position"]
+		self.permissions = role["permissions"]
+		self.managed = role["managed"]
+		self.mentionable = role["mentionable"]
+
+class Attachment:
+
+	def __init__(self,attachment):
+		self.id = attachment["id"]
+		self.filename = attachment["filename"]
+		self.size = attachment["size"]
+		self.url = attachment["url"]
+		self.proxy_url = attachment["proxy_url"]
+		self.height = attachment.get("height",None)
+		self.width = attachment.get("width",None)
+
+class Embed:
+
+	def __init__(self,embed):
+		self.title = embed.get("title",None)
+		self.type = embed.get("type",None)
+		self.description = embed.get("description",None)
+		self.url = embed.get("url",None)
+		self.timestamp = embed.get("timestamp",None)
+		self.color = embed.get("color",None)
+		self.footer = embed.get("footer",None)
+		self.image = embed.get("image",None)
+		self.thumbnail = embed.get("thumbnail",None)
+		self.video = embed.get("video",None)
+		self.provider = embed.get("provider",None)
+		self.author = embed.get("author",None)
+		self.fields = embed.get("fields",None) 
