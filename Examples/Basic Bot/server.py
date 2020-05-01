@@ -30,7 +30,11 @@ def index(user):
 def add_reaction(user):
 	if "message" in user.request.form:
 		if "channel" in user.request.form:
-			bot.send_message(user.request.form["channel"],user.request.form["message"])
+			message = user.request.form["message"].replace("+"," ")
+			clean_message = message.split("%")
+			for i in range(1,len(clean_message)):
+				clean_message[i] = chr(int(clean_message[i][:2],16))+clean_message[i][2:]
+			bot.send_message(user.request.form["channel"],"".join(clean_message))
 	return redirect(user,"/")
 
 site.start()
