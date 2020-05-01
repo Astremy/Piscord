@@ -4,15 +4,6 @@ import aiohttp
 from threading import Thread
 import time
 
-events_list = []
-
-def def_event(event):
-	def add_event(function):
-		events_list.append({event:[function.__name__,function]})
-		def thing():...
-		return thing
-	return add_event
-
 class Utility:
 
 	def get_self_user(self):
@@ -53,18 +44,18 @@ class Events:
 		class Event(Member):
 
 			def __init__(self,bot,data):
-				Member.__init__(self,reaction["member"])
-				self.emoji = Emoji(reaction["emoji"])
-				self.channel_id = reaction["channel_id"]
-				self.guild = reaction["guild_id"]
-				self.message_id = reaction["message_id"]
+				Member.__init__(self,data["member"])
+				self.emoji = Emoji(data["emoji"])
+				self.channel_id = data["channel_id"]
+				self.guild = data["guild_id"]
+				self.message_id = data["message_id"]
 				self.__bot = bot
 
 			def get_message(self):
 				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
 
 	def get_message(self):
-		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self._message}")),self.__bot)
+		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
 
 class Bot(Thread,Utility,Events):
 
@@ -284,18 +275,18 @@ class Message:
 		self.__bot = bot
 
 	def delete(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","DELETE"))
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}","DELETE"))
 
 	def edit(self,**modifs):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}","PATCH",json=modifs))
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}","PATCH",json=modifs))
 
 	def add_reaction(self, reaction):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
 
 	def delete_reactions(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel}/messages/{self.id}/reactions","DELETE"))
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE"))
 
-class User(Member):
+class User:
 
 	def __init__(self, user):
 		if "member" in user:
@@ -313,13 +304,13 @@ class User(Member):
 		self.discriminator = user["discriminator"]
 		self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
 
-class Member(User):
+class Member:
 
 	def __init__(self, member):
 		if "user" in member:
 			User.__init__(self,member["user"])
 		self.premium_since = member.get("premium_since",None)
-		self.roles = [Role(role) for role in member["roles"]]
+		self.roles = [role in member["roles"]]
 		self.mute = member["mute"]
 		self.deaf = member["deaf"]
 		self.nick = member.get("nick",None)
