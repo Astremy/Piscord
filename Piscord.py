@@ -310,7 +310,7 @@ class Member:
 		if "user" in member:
 			User.__init__(self,member["user"])
 		self.premium_since = member.get("premium_since",None)
-		self.roles = [role in member["roles"]]
+		self.roles = [role for role in member["roles"]]
 		self.mute = member["mute"]
 		self.deaf = member["deaf"]
 		self.nick = member.get("nick",None)
