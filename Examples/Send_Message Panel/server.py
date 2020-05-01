@@ -4,7 +4,7 @@ import os
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
 
-bot = Bot("NzA1NTE1ODMzNjk0MzU1NTY2.XquP6A.PR6ZCYPQPkw6X_XItTQr2sXzCxI")
+bot = Bot("Token")
 
 @bot.event("on_ready")
 def on_ready(user):
@@ -23,7 +23,7 @@ bot.start()
 
 site = Server("127.0.0.1",80)
 
-auth = OAuth(bot,"HUzL1Oom2IRYV90HP4rVLtM0mq9wjmt1","http://127.0.0.1/connect","identify guilds")
+auth = OAuth(bot,"Secret","http://127.0.0.1/connect","identify guilds")
 
 @site.path("/")
 def index(user):
