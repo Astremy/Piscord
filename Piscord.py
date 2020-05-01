@@ -58,7 +58,7 @@ class Bot(Thread,Utility):
 		await self.__main(response["url"])
 
 	async def __main(self,url):
-		events = {"READY":["on_ready",(lambda x,y:User(x["user"]))],"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction]}
+		events = {"READY":["on_ready",(lambda x,y:User(x["user"]))],"MESSAGE_CREATE":["on_message",Message],"MESSAGE_REACTION_ADD":["reaction_add",Reaction],"CHANNEL_CREATE":["channel_create",Channel]}
 		async with aiohttp.ClientSession() as session:
 			async with session.ws_connect(f"{url}?v=6&encoding=json") as ws:
 				async for msg in ws:
@@ -156,6 +156,10 @@ class Guild:
 		channels = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels"))
 		return [Channel(channel,self.__bot) for channel in channels]
 
+	def create_channel(self,**kwargs):
+		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel'''
+		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
+
 class Channel:
 
 	def __init__(self,channel,bot):
@@ -167,6 +171,13 @@ class Channel:
 
 	def edit(self,**modifs):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
+
+	def send(self,content):
+		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages", "POST", json={"content": content})),self.__bot)
+
+	def get_messages(self):
+		messages = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages"))
+		return [Message(message,self.__bot) for message in messages]
 
 class Message:
 
