@@ -136,7 +136,7 @@ class OAuth:
 		return asyncio.run(self.bot.api_call(url,"GET",headers=headers))
 
 	def get_user(self,token):
-		if "identify" in self.scope or "identify" in self.scope:
+		if "identify" in self.scope:
 			return User(self.__request_token(token,"/users/@me"))
 		return "Invalid Scope"
 
