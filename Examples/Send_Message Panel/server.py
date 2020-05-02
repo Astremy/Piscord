@@ -10,20 +10,11 @@ bot = Bot("Token")
 def on_ready(user):
 	print(f"Bot {user.name} Connected !")
 
-@bot.event("on_message")
-def on_message(message):
-	if message.content == "Ping !":
-		bot.send_message(message.channel,"Pong !")
-
-@bot.event("reaction_add")
-def reaction_add(reaction):
-	reaction.get_message().add_reaction(reaction.emoji.name)
-
 bot.start()
 
-site = Server("127.0.0.1",80)
+site = Server("localhost",8080)
 
-auth = OAuth(bot,"Secret","http://127.0.0.1/connect","identify guilds")
+auth = OAuth(bot,"Secret","http://localhost:8080/connect","identify guilds")
 
 @site.path("/")
 def index(user):
@@ -63,7 +54,7 @@ def discord_server(user,var):
 					clean_message = message.split("%")
 					for i in range(1,len(clean_message)):
 						clean_message[i] = chr(int(clean_message[i][:2],16))+clean_message[i][2:]
-					bot.send_message(user.request.form["channel"],"".join(clean_message))
+					bot.send_message(user.request.form["channel"],content="".join(clean_message))
 					return f"<script>window.location.href='{user.request.url}';</script>"
 				else:
 					return template("send_message.html",channs=" ".join(f"<a onclick='chann(\"{chann.id}\");'>{chann.name}</a>" for chann in guild.get_channels()))
