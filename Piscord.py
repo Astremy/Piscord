@@ -457,7 +457,7 @@ class Member(API_Element,User):
 	def edit(self, **modifs):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/channels/{guild_id}/messages/{user_id}","PATCH",json=modifs))
+			asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/messages/{user_id}","PATCH",json=modifs))
 
 	def kick(self):
 		if hasattr(self,"id"):
