@@ -6,7 +6,7 @@ from threading import Thread
 class Utility:
 
 	def get_self_user(self):
-		return User(asyncio.run(self.api_call("/users/@me", "GET")))
+		return User(asyncio.run(self.api_call("/users/@me", "GET")), self)
 
 	def get_self_guilds(self):
 		return [Guild(guild,self) for guild in asyncio.run(self.api_call("/users/@me/guilds", "GET"))]
@@ -21,7 +21,7 @@ class Utility:
 		return Channel(asyncio.run(self.api_call(f"/channels/{channel_id}","GET")),self)
 
 	def get_user(self,user_id):
-		return User(asyncio.run(self.api_call(f"/users/{user_id}")))
+		return User(asyncio.run(self.api_call(f"/users/{user_id}")), self)
 
 	def get_invite(self, invite_code):
 		return Invite(asyncio.run(self.api_call(f"/invites/{invite_code}","GET", json={"with_counts":True})))
@@ -40,16 +40,15 @@ class Events:
 
 			def __init__(self, bot, data):
 				self.version = data["v"]
-				User.__init__(self, data["user"])
+				User.__init__(self, data["user"],bot)
 
 		@self.def_event("MESSAGE_REACTION_ADD","reaction_add")
 		class Event(Member):
 
 			def __init__(self,bot,data):
-				Member.__init__(self,data["member"])
+				Member.__init__(self,{**data["member"],"guild_id":data["guild_id"]},bot)
 				self.emoji = Emoji(data["emoji"])
 				self.channel_id = data["channel_id"]
-				self.guild_id = data["guild_id"]
 				self.message_id = data["message_id"]
 				self.__bot = bot
 
@@ -92,7 +91,6 @@ class Events:
 		class Event(Member):
 
 			def __init__(self, bot, data):
-				self.guild_id = data["guild_id"]
 				Member.__init__(self,data,bot)
 
 		@self.def_event("GUILD_MEMBER_REMOVE","member_quit")
@@ -262,12 +260,17 @@ class OAuth:
 
 	def get_user(self,token):
 		if "identify" in self.scope:
-			return User(self.__request_token(token,"/users/@me"))
+			return User(self.__request_token(token,"/users/@me"),self.bot)
 		return "Invalid Scope"
 
 	def get_guilds(self,token):
 		if "guilds" in self.scope:
 			return [Guild(guild,self.bot) for guild in self.__request_token(token,"/users/@me/guilds")]
+		return "Invalid Scope"
+
+	def add_guild_member(self, token, guild_id, user_id):
+		if "guilds.join" in self.scope:
+			return Member({**self.bot.api_call(f"/guilds/{guild_id}/members/{user_id}","PUT",json=json.loads(token)["access_token"]),"guild_id":guild_id})
 		return "Invalid Scope"
 
 class API_Element:
@@ -299,6 +302,20 @@ class Guild(API_Element):
 		roles = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles"))
 		return [Role(role,self.__bot) for role in roles]
 
+	def get_members(self):
+		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members")),self.__bot
+		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
+
+	def get_member(self,user_id):
+		return Member({**asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels/{user_id}")),"guild_id":self.id},self.__bot)
+
+	def get_bans(self):
+		bans = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans")),self.__bot
+		return [Ban(ban,self.__bot) for ban in bans]
+
+	def get_ban(self, user_id):
+		return Ban(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans/{user_id}")),self.__bot)
+
 	def create_channel(self,**kwargs):
 		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel '''
 		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
@@ -324,7 +341,7 @@ class Channel(API_Element):
 		self.rate_limit_per_user = channel.get("rate_limit_per_user",None)
 		self.recipients = channel.get("recipients",None)
 		if "recipients" in channel:
-			self.recipients = [User(user) for user in channel["recipients"]]
+			self.recipients = [User(user,bot) for user in channel["recipients"]]
 		self.icon = channel.get("icon",None)
 		self.owner_id = channel.get("owner_id",None)
 		self.application_id = channel.get("application_id",None)
@@ -354,15 +371,15 @@ class Message(API_Element):
 		self.id = message["id"]
 		self.channel_id = message["channel_id"]
 		self.guild_id = message.get("guild_id",None)
-		self.author = User(message["author"])
+		self.author = User(message["author"],bot)
 		if "member" in message:
-			self.member = Member(message["member"])
+			self.author = Member({**message["member"],"user":{**message["author"]},"guild_id":self.guild_id}, bot)
 		self.content = message["content"]
 		self.timestamp = message["timestamp"]
 		self.edited_timestamp = message.get("edited_timestamp",None)
 		self.tts = message["tts"]
 		self.mention_everyone = message["mention_everyone"]
-		self.mentions = [User(mention) for mention in message["mentions"]]
+		self.mentions = [User(mention,bot) for mention in message["mentions"]]
 		self.mentions_roles = [Role(role, bot) for role in message["mention_roles"]]
 		self.mention_channels = []
 		if "mention_channels" in message:
@@ -402,9 +419,7 @@ class Message(API_Element):
 
 class User(API_Element):
 
-	def __init__(self, user):
-		if "member" in user:
-			Member.__init__(self,user["member"])
+	def __init__(self, user, bot):
 		self.system = user.get("system",None)
 		self.mfa_enabled = user.get("mfa_enabled",None)
 		self.locale = user.get("locale",None)
@@ -420,21 +435,49 @@ class User(API_Element):
 		if user["avatar"]:
 			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
 		self.mention = f"<@{self.id}>"
+		self.__bot = bot
 
 	def __repr__(self):
 		return self.name
 
-class Member(API_Element):
+class Member(API_Element,User):
 
-	def __init__(self, member):
+	def __init__(self, member, bot):
 		if "user" in member:
-			User.__init__(self,member["user"])
+			User.__init__(self,member["user"],bot)
+		self.guild_id = member.get("guild_id",None)
 		self.premium_since = member.get("premium_since",None)
 		self.roles = [role for role in member["roles"]]
 		self.mute = member["mute"]
 		self.deaf = member["deaf"]
 		self.nick = member.get("nick",None)
 		self.joined_at = member["joined_at"]
+		self.__bot = bot
+
+	def edit(self, **modifs):
+		if hasattr(self,"id"):
+			user_id=self.id
+			asyncio.run(self.__bot.api_call(f"/channels/{guild_id}/messages/{user_id}","PATCH",json=modifs))
+
+	def kick(self):
+		if hasattr(self,"id"):
+			user_id=self.id
+			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}","DELETE"))
+
+	def ban(self, reason=None):
+		if hasattr(self,"id"):
+			user_id=self.id
+			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/bans/{user_id}","PUT", json={"reason":reason}))
+
+	def add_role(self, role):
+		if hasattr(self,"id"):
+			user_id=self.id
+			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","PUT"))
+
+	def remove_role(self, role):
+		if hasattr(self,"id"):
+			user_id=self.id
+			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","DELETE"))
 
 class Reaction(API_Element):
 
@@ -524,7 +567,7 @@ class Invite(API_Element):
 			self.channel = Channel(invite["channel"], bot)
 		self.inviter = None
 		if "inviter" in invite:
-			self.channel = User(invite["inviter"])
+			self.channel = User(invite["inviter"], bot)
 		self.target_user = None
 		if "target_user" in invite:
 			self.channel = User(invite["target_user"], bot)
@@ -543,3 +586,13 @@ class Invite(API_Element):
 
 	def delete(self):
 		asyncio.run(self.__bot.api_call(f"/invites/{self.code}","DELETE"))
+
+class Ban(API_Element):
+
+	def __init__(self,ban,bot):
+		self.reason = ban.get("reason",None)
+		self.user = User(ban["user"])
+		self.__bot = bot
+
+	def pardon(self, guild_id):
+		asyncio.run(self.__bot.api_call(f"/guilds/{guild_id}/bans/{self.user.id}","DELETE"))
