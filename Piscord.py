@@ -440,7 +440,7 @@ class User(API_Element):
 	def __repr__(self):
 		return self.name
 
-class Member(API_Element,User):
+class Member(User):
 
 	def __init__(self, member, bot):
 		if "user" in member:
