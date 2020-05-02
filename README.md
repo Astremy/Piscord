@@ -17,7 +17,6 @@ Modules utilisés :
 - json
 - aiohttp
 - threading
-- time
 
 Auteur : Astremy
 
