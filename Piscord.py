@@ -23,6 +23,9 @@ class Utility:
 	def get_user(self,user_id):
 		return User(asyncio.run(self.api_call(f"/users/{user_id}")))
 
+	def get_invite(self, invite_code):
+		return Invite(asyncio.run(self.api_call(f"/invites/{invite_code}","GET", json={"with_counts":True})))
+
 class Events:
 	def __init__(self):
 		
@@ -46,15 +49,87 @@ class Events:
 				Member.__init__(self,data["member"])
 				self.emoji = Emoji(data["emoji"])
 				self.channel_id = data["channel_id"]
-				self.guild = data["guild_id"]
+				self.guild_id = data["guild_id"]
 				self.message_id = data["message_id"]
 				self.__bot = bot
 
 			def get_message(self):
 				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
 
-	def get_message(self):
-		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
+		@self.def_event("MESSAGE_REACTION_REMOVE","reaction_remove")
+		class Event:
+
+			def __init__(self, bot, data):
+				self.user_id = data["user_id"]
+				self.channel_id = data["channel_id"]
+				self.message_id = data["message_id"]
+				self.guild_id = data["guild_id"]
+				self.emoji = Emoji(data["emoji"])
+				self.__bot = bot
+
+			def get_message(self):
+				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
+
+		@self.def_event("CHANNEL_CREATE","channel_create")
+		class Event(Channel):
+
+			def __init__(self, bot, data):
+				Channel.__init__(self, data, bot)
+
+		@self.def_event("CHANNEL_DELETE","channel_delete")
+		class Event(Channel):
+
+			def __init__(self, bot, data):
+				Channel.__init__(self, data, bot)
+
+		@self.def_event("CHANNEL_UPDATE","channel_update")
+		class Event(Channel):
+
+			def __init__(self, bot, data):
+				Channel.__init__(self, data, bot)
+
+		@self.def_event("GUILD_MEMBER_ADD","member_join")
+		class Event(Member):
+
+			def __init__(self, bot, data):
+				self.guild_id = data["guild_id"]
+				Member.__init__(self,data,bot)
+
+		@self.def_event("GUILD_MEMBER_REMOVE","member_quit")
+		class Event(User):
+
+			def __init__(self, bot, data):
+				self.guild_id = data["guild_id"]
+				User.__init__(self,data["user"],bot)
+
+		@self.def_event("GUILD_ROLE_CREATE","role_create")
+		class Event(Role):
+
+			def __init__(self, bot, data):
+				Role.__init__(self, data, bot)
+
+		@self.def_event("GUILD_ROLE_DELETE","role_delete")
+		class Event:
+
+			def __init__(self, bot, data):
+				self.guild_id = data["guild_id"]
+				self.role_id = data["role_id"]
+
+		@self.def_event("INVITE_CREATE","invite_create")
+		class Event(Invite):
+
+			def __init__(self, bot, data):
+				self.channel_id = data["channel_id"]
+				self.guild_id = data.get("guild_id",None)
+				Invite.__init__(self, data, bot)
+
+		@self.def_event("INVITE_DELETE","invite_delete")
+		class Event:
+
+			def __init__(self, bot, data):
+				self.code = data["code"]
+				self.channel_id = data["channel_id"]
+				self.guild_id = data.get("guild_id",None)
 
 class Bot(Thread,Utility,Events):
 
@@ -76,11 +151,17 @@ class Bot(Thread,Utility,Events):
 		return add_event
 
 	def event(self,arg):
+		def truc():...
+
 		def add_event(function):
 			self.events[arg]=function
-			def truc():...
 			return truc
-		return add_event
+
+		if type(arg) == str:
+			return add_event
+
+		self.events[arg.__name__] = arg
+		return truc
 
 	async def api_call(self,path, method="GET", **kwargs):
 		defaults = {
@@ -207,13 +288,24 @@ class Guild(API_Element):
 		self.name = guild["name"]
 		self.__bot = bot
 
+	def __repr__(self):
+		return self.name
+
 	def get_channels(self):
 		channels = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels"))
 		return [Channel(channel,self.__bot) for channel in channels]
 
+	def get_roles(self):
+		roles = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles"))
+		return [Role(role,self.__bot) for role in roles]
+
 	def create_channel(self,**kwargs):
-		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel'''
+		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel '''
 		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
+
+	def create_role(self,**kwargs):
+		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-role '''
+		return Role(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles", "POST", json=kwargs)),self.__bot)
 
 class Channel(API_Element):
 
@@ -240,6 +332,9 @@ class Channel(API_Element):
 		self.last_pin_timestamp = channel.get("last_pin_timestamp",None)
 		self.__bot = bot
 
+	def __repr__(self):
+		return self.name
+
 	def edit(self,**modifs):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
 
@@ -249,6 +344,9 @@ class Channel(API_Element):
 	def get_messages(self):
 		messages = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages"))
 		return [Message(message,self.__bot) for message in messages]
+
+	def create_invite(self,**kwargs):
+		return Invite(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites","POST",json=kwargs)),self.__bot)
 
 class Message(API_Element):
 
@@ -265,7 +363,7 @@ class Message(API_Element):
 		self.tts = message["tts"]
 		self.mention_everyone = message["mention_everyone"]
 		self.mentions = [User(mention) for mention in message["mentions"]]
-		self.mentions_roles = [Role(role) for role in message["mention_roles"]]
+		self.mentions_roles = [Role(role, bot) for role in message["mention_roles"]]
 		self.mention_channels = []
 		if "mention_channels" in message:
 			self.mention_channels = [Channel(channel,bot) for channel in message["mention_channels"]]
@@ -284,6 +382,9 @@ class Message(API_Element):
 		self.flags = message.get("flags",None)
 		self.__bot = bot
 
+	def __repr__(self):
+		return self.content
+
 	def delete(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}","DELETE"))
 
@@ -295,6 +396,9 @@ class Message(API_Element):
 
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE"))
+
+	def delete_reaction(self, reaction):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE"))
 
 class User(API_Element):
 
@@ -316,6 +420,9 @@ class User(API_Element):
 		if user["avatar"]:
 			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
 		self.mention = f"<@{self.id}>"
+
+	def __repr__(self):
+		return self.name
 
 class Member(API_Element):
 
@@ -344,15 +451,27 @@ class Emoji(API_Element):
 
 class Role(API_Element):
 
-	def __init__(self,role):
-		self.id = role["id"]
-		self.name = role["name"]
-		self.color = role["color"]
-		self.hoist = role["hoist"]
-		self.position = role["position"]
-		self.permissions = role["permissions"]
-		self.managed = role["managed"]
-		self.mentionable = role["mentionable"]
+	def __init__(self, role, bot):
+		self.id = role.get("id",None)
+		self.name = role.get("name",None)
+		self.color = role.get("color",None)
+		self.hoist = role.get("hoist",None)
+		self.position = role.get("position",None)
+		self.permissions = role.get("permissions",None)
+		self.managed = role.get("managed",None)
+		self.mentionable = role.get("mentionable",None)
+		self.guild_id = role.get("guild_id",None)
+		self.__bot = bot
+
+	def __repr__(self):
+		return self.name
+
+	def delete(self):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/roles/{self.id}","DELETE"))
+
+	def edit(self,**modifs):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/messages/{self.id}","PATCH",json=modifs))
+
 
 class Attachment(API_Element):
 
@@ -391,3 +510,37 @@ class Embed_Image(API_Element):
 		self.proxy_url = image.get("proxy_url",None)
 		self.height = image.get("height",None)
 		self.width = image.get("width",None)
+
+class Invite(API_Element):
+
+	def __init__(self, invite, bot):
+		self.code = invite["code"]
+		self.url = f"https://discord.gg/{self.code}"
+		self.guild = None
+		if "guild" in invite:
+			self.guild = Guild(invite["guild"], bot)
+		self.channel = None
+		if "channel" in invite:
+			self.channel = Channel(invite["channel"], bot)
+		self.inviter = None
+		if "inviter" in invite:
+			self.channel = User(invite["inviter"])
+		self.target_user = None
+		if "target_user" in invite:
+			self.channel = User(invite["target_user"], bot)
+		self.target_user_type = invite.get("target_user_type",None)
+		self.approximate_presence_count = invite.get("approximate_presence_count",None)
+		self.approximate_member_count = invite.get("approximate_member_count",None)
+		self.max_age = invite.get("max_age",None)
+		self.max_uses = invite.get("max_uses",None)
+		self.temporary = invite.get("temporary",None)
+		self.uses = invite.get("uses",None)
+		self.created_at = invite.get("created_at",None)
+		self.__bot = bot
+
+	def __repr__(self):
+		return self.url
+
+	def delete(self):
+		print(self.code)
+		asyncio.run(self.__bot.api_call(f"/invites/{self.code}","DELETE"))
