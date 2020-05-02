@@ -20,4 +20,6 @@ Modules utilisés :
 
 Auteur : Astremy
 
+Discord : [Piscord](https://discord.gg/U9X7XzP)
+
 This project is licensed under the terms of the MIT license : [License](https://github.com/Astremy/Piscord/blob/master/LICENSE.md)
