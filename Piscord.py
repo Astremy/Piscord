@@ -12,8 +12,8 @@ class Utility:
 	def get_self_guilds(self):
 		return [Guild(guild,self) for guild in asyncio.run(self.api_call("/users/@me/guilds", "GET"))]
 
-	def send_message(self,channel,content):
-		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json={"content": content})),self)
+	def send_message(self,channel,**kwargs):
+		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json=kwargs)),self)
 
 	def get_guild(self,guild_id):
 		return Guild(asyncio.run(self.api_call(f"/guilds/{guild_id}","GET")),self)
@@ -190,7 +190,18 @@ class OAuth:
 			return [Guild(guild,self.bot) for guild in self.__request_token(token,"/users/@me/guilds")]
 		return "Invalid Scope"
 
-class Guild:
+class API_Element:
+
+	def to_json(self):
+		output = {}
+		for x,y in self.__dict__.items():
+			if y:
+				if type(y) not in [str,int]:
+					y=y.to_json()
+				output[x]=y
+		return output
+
+class Guild(API_Element):
 
 	def __init__(self, guild, bot):
 		self.id = guild["id"]
@@ -205,7 +216,7 @@ class Guild:
 		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel'''
 		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
 
-class Channel:
+class Channel(API_Element):
 
 	def __init__(self,channel,bot):
 		self.id = channel["id"]
@@ -233,14 +244,14 @@ class Channel:
 	def edit(self,**modifs):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
 
-	def send(self,content):
-		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages", "POST", json={"content": content})),self.__bot)
+	def send(self,**kwargs):
+		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages", "POST", json=kwargs)),self.__bot)
 
 	def get_messages(self):
 		messages = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages"))
 		return [Message(message,self.__bot) for message in messages]
 
-class Message:
+class Message(API_Element):
 
 	def __init__(self, message, bot):
 		self.id = message["id"]
@@ -286,7 +297,7 @@ class Message:
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE"))
 
-class User:
+class User(API_Element):
 
 	def __init__(self, user):
 		if "member" in user:
@@ -302,9 +313,12 @@ class User:
 		self.id = user["id"]
 		self.name = user["username"]
 		self.discriminator = user["discriminator"]
-		self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
+		self.avatar = None
+		if user["avatar"]:
+			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}.png"
+		self.mention = f"<@{self.id}>"
 
-class Member:
+class Member(API_Element):
 
 	def __init__(self, member):
 		if "user" in member:
@@ -316,20 +330,20 @@ class Member:
 		self.nick = member.get("nick",None)
 		self.joined_at = member["joined_at"]
 
-class Reaction:
+class Reaction(API_Element):
 
 	def __init__(self,reaction):
 		self.count = reaction["count"]
 		self.me = reaction["me"]
 		self.emoji = Emoji(reaction["emoji"])
 
-class Emoji:
+class Emoji(API_Element):
 
 	def __init__(self,emoji):
 		self.name = emoji["name"]
 		self.id = emoji["id"]
 
-class Role:
+class Role(API_Element):
 
 	def __init__(self,role):
 		self.id = role["id"]
@@ -341,7 +355,7 @@ class Role:
 		self.managed = role["managed"]
 		self.mentionable = role["mentionable"]
 
-class Attachment:
+class Attachment(API_Element):
 
 	def __init__(self,attachment):
 		self.id = attachment["id"]
@@ -352,7 +366,7 @@ class Attachment:
 		self.height = attachment.get("height",None)
 		self.width = attachment.get("width",None)
 
-class Embed:
+class Embed(API_Element):
 
 	def __init__(self,embed):
 		self.title = embed.get("title",None)
@@ -362,9 +376,19 @@ class Embed:
 		self.timestamp = embed.get("timestamp",None)
 		self.color = embed.get("color",None)
 		self.footer = embed.get("footer",None)
-		self.image = embed.get("image",None)
+		self.image = None
+		if "image" in embed:
+			self.image = Embed_Image(embed["image"])
 		self.thumbnail = embed.get("thumbnail",None)
 		self.video = embed.get("video",None)
 		self.provider = embed.get("provider",None)
 		self.author = embed.get("author",None)
-		self.fields = embed.get("fields",None) 
+		self.fields = embed.get("fields",None)
+
+class Embed_Image(API_Element):
+
+	def __init__(self,image):
+		self.url = image.get("url",None)
+		self.proxy_url = image.get("proxy_url",None)
+		self.height = image.get("height",None)
+		self.width = image.get("width",None)
