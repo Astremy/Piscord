@@ -2,7 +2,6 @@ import asyncio
 import json
 import aiohttp
 from threading import Thread
-import time
 
 class Utility:
 
