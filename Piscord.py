@@ -542,5 +542,4 @@ class Invite(API_Element):
 		return self.url
 
 	def delete(self):
-		print(self.code)
 		asyncio.run(self.__bot.api_call(f"/invites/{self.code}","DELETE"))
