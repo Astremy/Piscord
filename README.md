@@ -21,3 +21,4 @@ Modules utilisés :
 
 Auteur : Astremy
 
+This project is licensed under the terms of the MIT license : [License](https://github.com/Astremy/Piscord/blob/master/LICENSE.md)
