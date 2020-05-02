@@ -35,7 +35,7 @@ def reaction_add(reaction):
 
 bot.start()
 
-site = Server("localhost",80)
+site = Server("localhost",8080)
 
 @site.path("/")
 def index(user):
