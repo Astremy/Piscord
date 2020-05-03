@@ -171,7 +171,7 @@ class Bot(Thread,Utility,Events):
 		defaults = {
 			"headers": {
 				"Authorization": f"Bot {self.token}",
-				"User-Agent": "Test Bot"
+				"User-Agent": "Bot"
 			}
 		}
 		kwargs = dict(defaults, **kwargs)
