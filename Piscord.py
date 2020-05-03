@@ -285,7 +285,7 @@ class API_Element:
 		output = {}
 		for x,y in self.__dict__.items():
 			if y:
-				if type(y) not in [str,int]:
+				if isinstance(y,API_Element):
 					y=y.to_json()
 				output[x]=y
 		return output
