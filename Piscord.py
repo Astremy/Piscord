@@ -321,11 +321,11 @@ class Guild(API_Element):
 		return Ban(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans/{user_id}")),self.__bot)
 
 	def create_channel(self,**kwargs):
-		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel '''
+		''' kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-channel '''
 		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
 
 	def create_role(self,**kwargs):
-		''' Kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-role '''
+		''' kwargs : https://discordapp.com/developers/docs/resources/guild#create-guild-role '''
 		return Role(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles", "POST", json=kwargs)),self.__bot)
 
 class Channel(API_Element):
@@ -388,7 +388,7 @@ class Message(API_Element):
 		self.tts = message["tts"]
 		self.mention_everyone = message["mention_everyone"]
 		self.mentions = [User(mention,bot) for mention in message["mentions"]]
-		self.mentions_roles = [Role(role, bot) for role in message["mention_roles"]]
+		self.mentions_roles = message["mention_roles"]
 		self.mention_channels = []
 		if "mention_channels" in message:
 			self.mention_channels = [Channel(channel,bot) for channel in message["mention_channels"]]
@@ -535,6 +535,13 @@ class Attachment(API_Element):
 		self.height = attachment.get("height",None)
 		self.width = attachment.get("width",None)
 
+class Allowed_Mentions(API_Element):
+
+	def __init__(self,mentions):
+		self.parse = mentions.get("parse",None)
+		self.roles = mentions.get("roles",None)
+		self.users = mentions.get("users",None)
+
 class Embed(API_Element):
 
 	def __init__(self,embed):
@@ -544,13 +551,17 @@ class Embed(API_Element):
 		self.url = embed.get("url",None)
 		self.timestamp = embed.get("timestamp",None)
 		self.color = embed.get("color",None)
-		self.footer = embed.get("footer",None)
+		self.footer = Embed_Footer(embed.get("footer",{}))
 		self.image = Embed_Image(embed.get("image",{}))
 		self.thumbnail = Embed_Image(embed.get("thumbnail",{}))
 		self.video = Embed_Image(embed.get("video",{}))
-		self.provider = embed.get("provider",None)
-		self.author = embed.get("author",None)
-		self.fields = embed.get("fields",None)
+		self.provider = Embed_Provider(embed.get("provider",{}))
+		self.author = Embed_Author(embed.get("author",{}))
+		self.fields = [Embed_Field(field) for field in embed.get("fields",[])]
+
+	def add_field(self,**kwargs):
+		self.fields.append(Embed_Field(kwargs))
+		return self.fields[-1]
 
 class Embed_Image(API_Element):
 
@@ -559,6 +570,34 @@ class Embed_Image(API_Element):
 		self.proxy_url = image.get("proxy_url",None)
 		self.height = image.get("height",None)
 		self.width = image.get("width",None)
+
+class Embed_Field(API_Element):
+
+	def __init__(self,field):
+		self.name = field.get("name",None)
+		self.value = field.get("value",None)
+		self.inline = field.get("inline",None)
+
+class Embed_Footer(API_Element):
+
+	def __init__(self,footer):
+		self.text = footer.get("text",None)
+		self.icon_url = footer.get("icon_url",None)
+		self.proxy_icon_url = footer.get("proxy_icon_url",None)
+
+class Embed_Provider(API_Element):
+
+	def __init__(self,provider):
+		self.name = provider.get("name",None)
+		self.url = provider.get("url",None)
+
+class Embed_Author(API_Element):
+
+	def __init__(self,author):
+		self.name = author.get("name",None)
+		self.url = author.get("url",None)
+		self.icon_url = author.get("icon_url",None)
+		self.proxy_icon_url = author.get("proxy_icon_url",None)
 
 class Invite(API_Element):
 
