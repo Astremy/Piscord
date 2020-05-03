@@ -307,7 +307,7 @@ class Guild(API_Element):
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
 
 	def get_member(self,user_id):
-		return Member({**asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels/{user_id}")),"guild_id":self.id},self.__bot)
+		return Member({**asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members/{user_id}")),"guild_id":self.id},self.__bot)
 
 	def get_bans(self):
 		bans = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans")),self.__bot
