@@ -24,7 +24,7 @@ class Utility:
 		return User(asyncio.run(self.api_call(f"/users/{user_id}")), self)
 
 	def get_invite(self, invite_code):
-		return Invite(asyncio.run(self.api_call(f"/invites/{invite_code}","GET", json={"with_counts":True})))
+		return Invite(asyncio.run(self.api_call(f"/invites/{invite_code}","GET", params={"with_counts":"true"})),self)
 
 class Events:
 	def __init__(self):
@@ -302,6 +302,10 @@ class Guild(API_Element):
 		roles = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles"))
 		return [Role(role,self.__bot) for role in roles]
 
+	def get_invites(self):
+		invites = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/invites"))
+		return [Invite(invite,self.__bot) for invite in invites]
+
 	def get_members(self):
 		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members")),self.__bot
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
@@ -361,6 +365,10 @@ class Channel(API_Element):
 	def get_messages(self):
 		messages = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages"))
 		return [Message(message,self.__bot) for message in messages]
+
+	def get_invites(self):
+		invites = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites"))
+		return [Invite(invite,self.__bot) for invite in invites]
 
 	def create_invite(self,**kwargs):
 		return Invite(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites","POST",json=kwargs)),self.__bot)
@@ -537,11 +545,9 @@ class Embed(API_Element):
 		self.timestamp = embed.get("timestamp",None)
 		self.color = embed.get("color",None)
 		self.footer = embed.get("footer",None)
-		self.image = None
-		if "image" in embed:
-			self.image = Embed_Image(embed["image"])
-		self.thumbnail = embed.get("thumbnail",None)
-		self.video = embed.get("video",None)
+		self.image = Embed_Image(embed.get("image",{}))
+		self.thumbnail = Embed_Image(embed.get("thumbnail",{}))
+		self.video = Embed_Image(embed.get("video",{}))
 		self.provider = embed.get("provider",None)
 		self.author = embed.get("author",None)
 		self.fields = embed.get("fields",None)
@@ -567,7 +573,7 @@ class Invite(API_Element):
 			self.channel = Channel(invite["channel"], bot)
 		self.inviter = None
 		if "inviter" in invite:
-			self.channel = User(invite["inviter"], bot)
+			self.inviter = User(invite["inviter"], bot)
 		self.target_user = None
 		if "target_user" in invite:
 			self.channel = User(invite["target_user"], bot)
