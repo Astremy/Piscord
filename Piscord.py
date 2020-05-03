@@ -55,6 +55,12 @@ class Events:
 			def get_message(self):
 				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
 
+			def delete(self):
+				if self.id == self.__bot.get_self_user().id:
+					self.get_message().delete_self_reaction(self.emoji.name)
+				else:
+					self.get_message().delete_reaction(self.emoji.name,user_id=self.id)
+
 		@self.def_event("MESSAGE_REACTION_REMOVE","reaction_remove")
 		class Event:
 
@@ -335,7 +341,7 @@ class Channel(API_Element):
 		self.type = channel["type"]
 		self.guild_id = channel.get("guild_id",None)
 		self.position = channel.get("position",None)
-		self.permission_overwrites = channel.get("permission_overwrites",None) #Object
+		self.permission_overwrites = [Overwrite(overwrite,bot,self) for overwrite in channel.get("permission_overwrites",[])]
 		self.name = channel.get("name",None)
 		self.topic = channel.get("topic",None)
 		self.nsfw = channel.get("nsfw",None)
@@ -396,7 +402,7 @@ class Message(API_Element):
 		self.embeds = [Embed(embed) for embed in message["embeds"]]
 		self.reactions = []
 		if "reactions" in message:
-			self.reactions = [Reaction(reaction) for reaction in message["reactions"]]
+			self.reactions = [Reaction(reaction,self) for reaction in message["reactions"]]
 		self.nonce = message.get("nonce",None)
 		self.pinned = message["pinned"]
 		self.webhook_id = message.get("webhook_id",None)
@@ -422,8 +428,15 @@ class Message(API_Element):
 	def delete_reactions(self):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE"))
 
-	def delete_reaction(self, reaction):
+	def delete_self_reaction(self, reaction):
 		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE"))
+
+	def delete_reaction(self,reaction,user_id=None):
+		if user_id:
+			asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE"))
+		else:
+			asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}","DELETE"))
+
 
 class User(API_Element):
 
@@ -447,6 +460,9 @@ class User(API_Element):
 
 	def __repr__(self):
 		return self.name
+
+	def create_dm(self):
+		return Channel(asyncio.run(self.__bot.api_call(f"/users/@me/channels","POST",json={"recipient_id":self.id})),self.__bot)
 
 class Member(User):
 
@@ -489,10 +505,11 @@ class Member(User):
 
 class Reaction(API_Element):
 
-	def __init__(self,reaction):
+	def __init__(self,reaction,message):
 		self.count = reaction["count"]
 		self.me = reaction["me"]
 		self.emoji = Emoji(reaction["emoji"])
+		self.message = message
 
 class Emoji(API_Element):
 
@@ -641,3 +658,19 @@ class Ban(API_Element):
 
 	def pardon(self, guild_id):
 		asyncio.run(self.__bot.api_call(f"/guilds/{guild_id}/bans/{self.user.id}","DELETE"))
+
+class Overwrite(API_Element):
+
+	def __init__(self,overwrite,bot,channel):
+		self.id = overwrite["id"]
+		self.type = overwrite["type"]
+		self.allow = overwrite["allow"]
+		self.deny = overwrite["deny"]
+		self.channel = channel
+		self.__bot = bot
+
+	def edit(self,**modifs):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel.id}/permissions/{self.id}","PUT",json=modifs))
+
+	def delete(self):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.channel.id}/permissions/{self.id}","DELETE"))
