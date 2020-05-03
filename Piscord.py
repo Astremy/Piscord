@@ -285,8 +285,15 @@ class API_Element:
 		output = {}
 		for x,y in self.__dict__.items():
 			if y:
+				if type(y) == list:
+					e=[]
+					for p in y:
+						if isinstance(p,API_Element):
+							p = p.to_json()
+						e += p
+					y = e
 				if isinstance(y,API_Element):
-					y=y.to_json()
+					y = y.to_json()
 				output[x]=y
 		return output
 
