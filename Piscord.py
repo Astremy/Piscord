@@ -290,7 +290,7 @@ class API_Element:
 					for p in y:
 						if isinstance(p,API_Element):
 							p = p.to_json()
-						e += p
+						e += [p]
 					y = e
 				if isinstance(y,API_Element):
 					y = y.to_json()
