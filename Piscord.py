@@ -302,6 +302,49 @@ class Guild(API_Element):
 	def __init__(self, guild, bot):
 		self.id = guild["id"]
 		self.name = guild["name"]
+		self.icon = guild.get("icon",None)
+		self.splash = guild.get("splash",None)
+		self.discovery_splash = guild.get("discovery_splash",None)
+		self.owner = guild.get("owner",None)
+		self.owner_id = guild.get("owner_id",None)
+		self.permissions = guild.get("permissions",None)
+		self.region = guild.get("region",None)
+		self.afk_channel_id = guild.get("afk_channel_id",None)
+		self.afk_timeout = guild.get("afk_timeout",None)
+		self.embed_enabled = guild.get("embed_enabled",None)
+		self.embed_channel_id = guild.get("embed_channel_id",None)
+		self.verification_level = guild.get("verification_level",None)
+		self.default_message_notifications = guild.get("default_message_notifications",None)
+		self.explicit_content_filter = guild.get("explicit_content_filter",None)
+		self.roles = [Role(role,bot) for role in guild.get("roles",[])]
+		self.emojis = [Emoji(emoji) for emoji in guild.get("emojis",[])]
+		self.features = guild.get("features",[]) #To Do
+		self.mfa_level = guild.get("mfa_level",None)
+		self.application_id = guild.get("application_id",None)
+		self.widget_enabled = guild.get("widget_enabled",None)
+		self.widget_channel_id = guild.get("widget_channel_id",None)
+		self.system_channel_id = guild.get("system_channel_id",None)
+		self.system_channel_flags = guild.get("system_channel_flags",None)
+		self.rules_channel_id = guild.get("rules_channel_id",None)
+		self.joined_at = guild.get("joined_at",None)
+		self.large = guild.get("large",None)
+		self.unavailable = guild.get("unavailable",None)
+		self.member_count = guild.get("member_count",None)
+		self.voice_states = guild.get("voice_states",None)
+		self.members = [Member(member,bot) for member in guild.get("members",[])]
+		self.channels = [Channel(channel,bot) for channel in guild.get("channels",[])]
+		self.presences = guild.get("presences",[]) # To Do
+		self.max_presences = guild.get("max_presences",None)
+		self.max_members = guild.get("max_members",None)
+		self.vanity_url_code = guild.get("vanity_url_code",None)
+		self.description = guild.get("description",None)
+		self.banner = guild.get("banner",None)
+		self.premium_tier = guild.get("premium_tier",None)
+		self.premium_subscription_count = guild.get("premium_subscription_count",None)
+		self.preferred_locale = guild.get("preferred_locale",None)
+		self.public_updates_channel_id = guild.get("public_updates_channel_id",None)
+		self.approximate_member_count = guild.get("approximate_member_count",None)
+		self.approximate_presence_count = guild.get("approximate_presence_count",None)
 		self.__bot = bot
 
 	def __repr__(self):
@@ -386,6 +429,9 @@ class Channel(API_Element):
 	def create_invite(self,**kwargs):
 		return Invite(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites","POST",json=kwargs)),self.__bot)
 
+	def typing(self):
+		asyncio.run(self.__bot.api_call(f"/channels/{self.id}/typing","POST"))
+
 class Message(API_Element):
 
 	def __init__(self, message, bot):
@@ -448,6 +494,7 @@ class Message(API_Element):
 class User(API_Element):
 
 	def __init__(self, user, bot):
+		self.bot = user.get("bot",None)
 		self.system = user.get("system",None)
 		self.mfa_enabled = user.get("mfa_enabled",None)
 		self.locale = user.get("locale",None)
