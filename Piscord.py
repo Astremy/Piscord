@@ -363,7 +363,7 @@ class Guild(API_Element):
 		return [Invite(invite,self.__bot) for invite in invites]
 
 	def get_members(self):
-		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members")),self.__bot
+		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members"))
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
 
 	def get_member(self,user_id):
