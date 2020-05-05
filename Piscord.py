@@ -362,7 +362,7 @@ class Guild(API_Element):
 		invites = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/invites"))
 		return [Invite(invite,self.__bot) for invite in invites]
 
-	def get_members(self, limit=100, after=None):
+	def get_members(self, limit=100, after=0):
 		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members","GET",params={"limit":limit,"after":after}))
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
 
