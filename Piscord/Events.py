@@ -1,3 +1,4 @@
+import asyncio
 from .API_Elements import *
 
 class Events:
