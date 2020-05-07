@@ -508,7 +508,7 @@ class User(API_Element):
 		self.discriminator = user["discriminator"]
 		self.avatar = f"https://cdn.discordapp.com/embed/avatars/{user["discriminator"] % 5}.png"
 		if user["avatar"]:
-                        avatar_format = ".gif" if user['avatar'].startswith("a_") else ".webp"
+                      avatar_format = ".gif" if user['avatar'].startswith("a_") else ".webp"
 			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}{avatar_format}"
 		self.mention = f"<@{self.id}>"
 		self.__bot = bot
