@@ -2,23 +2,24 @@
 
 # Piscord
 
-Piscord est un framework python permettant de communiquer avec l'api Discord.
+Piscord is a python framework to communicate with the Discord api.
 
-Il simplifie notamment la création de bot interagissant avec un server Web.
-Il permet ainsi de faire beaucoup plus facilement diverses choses comme des panel de controle de bot.
 
-Ainsi, dans tout les exemples, Piscord est utilisé avec [SAPAS](https://github.com/Astremy/SAPAS).
+In particular, it simplifies the creation of a bot that interacts with a Web server.
+It thus allows to do much more easily various things like bot control panels.
 
-Comment l'utiliser :
-Il suffit de le mettre dans le dossier de votre projet et d'ensuite l'importer.
+Thus, in all the examples, Piscord is used with [SAPAS](https://github.com/Astremy/SAPAS).
 
-Modules utilisés :
+How to use it :
+Just put it in your project folder and then import it.
+
+Used Modules :
 - asyncio
 - json
 - aiohttp
 - threading
 
-Auteur : Astremy
+Author : Astremy
 
 Discord : [Piscord](https://discord.gg/U9X7XzP)
 
