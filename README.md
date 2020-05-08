@@ -1,4 +1,4 @@
-<img src="https://discordapp.com/assets/e05ead6e6ebc08df9291738d0aa6986d.png" align="right" />
+<img src="https://github.com/Astremy/Piscord/blob/master/assets/Logo_Piscord.png" width="170" align="right" />
 
 # Piscord
 
