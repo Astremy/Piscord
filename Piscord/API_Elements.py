@@ -72,38 +72,38 @@ class Guild(API_Element):
 		return self.name
 
 	def get_channels(self):
-		channels = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels"))
+		channels = self.__bot.api(f"/guilds/{self.id}/channels")
 		return [Channel(channel,self.__bot) for channel in channels]
 
 	def get_roles(self):
-		roles = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles"))
+		roles = self.__bot.api(f"/guilds/{self.id}/roles")
 		return [Role(role,self.__bot) for role in roles]
 
 	def get_invites(self):
-		invites = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/invites"))
+		invites = self.__bot.api(f"/guilds/{self.id}/invites")
 		return [Invite(invite,self.__bot) for invite in invites]
 
 	def get_members(self, limit=100, after=0):
-		members = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members","GET",params={"limit":limit,"after":after}))
+		members = self.__bot.api(f"/guilds/{self.id}/members","GET",params={"limit":limit,"after":after})
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
 
 	def get_member(self,user_id):
-		return Member({**asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/members/{user_id}")),"guild_id":self.id},self.__bot)
+		return Member({**self.__bot.api(f"/guilds/{self.id}/members/{user_id}"),"guild_id":self.id},self.__bot)
 
 	def get_bans(self):
-		bans = asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans")),self.__bot
+		bans = self.__bot.api(f"/guilds/{self.id}/bans")
 		return [Ban(ban,self.__bot) for ban in bans]
 
 	def get_ban(self, user_id):
-		return Ban(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/bans/{user_id}")),self.__bot)
+		return Ban(self.__bot.api(f"/guilds/{self.id}/bans/{user_id}"),self.__bot)
 
 	def create_channel(self,**kwargs):
 		''' kwargs : https://discord.com/developers/docs/resources/guild#create-guild-channel '''
-		return Channel(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/channels", "POST", json=kwargs)),self.__bot)
+		return Channel(self.__bot.api(f"/guilds/{self.id}/channels", "POST", json=kwargs),self.__bot)
 
 	def create_role(self,**kwargs):
 		''' kwargs : https://discord.com/developers/docs/resources/guild#create-guild-role '''
-		return Role(asyncio.run(self.__bot.api_call(f"/guilds/{self.id}/roles", "POST", json=kwargs)),self.__bot)
+		return Role(self.__bot.api(f"/guilds/{self.id}/roles", "POST", json=kwargs),self.__bot)
 
 class Channel(API_Element):
 
@@ -134,24 +134,24 @@ class Channel(API_Element):
 		return self.name
 
 	def edit(self,**modifs):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.id}","PATCH",json=modifs))
+		self.__bot.api(f"/channels/{self.id}","PATCH",json=modifs)
 
 	def send(self,**kwargs):
-		return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages", "POST", json=kwargs)),self.__bot)
+		return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", json=kwargs),self.__bot)
 
 	def get_messages(self):
-		messages = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/messages"))
+		messages = self.__bot.api(f"/channels/{self.id}/messages")
 		return [Message(message,self.__bot) for message in messages]
 
 	def get_invites(self):
-		invites = asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites"))
+		invites = self.__bot.api(f"/channels/{self.id}/invites")
 		return [Invite(invite,self.__bot) for invite in invites]
 
 	def create_invite(self,**kwargs):
-		return Invite(asyncio.run(self.__bot.api_call(f"/channels/{self.id}/invites","POST",json=kwargs)),self.__bot)
+		return Invite(self.__bot.api(f"/channels/{self.id}/invites","POST",json=kwargs),self.__bot)
 
 	def typing(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.id}/typing","POST"))
+		self.__bot.api(f"/channels/{self.id}/typing","POST")
 
 class Message(API_Element):
 
@@ -191,25 +191,25 @@ class Message(API_Element):
 		return self.content
 
 	def delete(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}","DELETE"))
+		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}","DELETE")
 
 	def edit(self,**modifs):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}","PATCH",json=modifs))
+		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}","PATCH",json=modifs)
 
 	def add_reaction(self, reaction):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","PUT"))
+		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","PUT")
 
 	def delete_reactions(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE"))
+		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE")
 
 	def delete_self_reaction(self, reaction):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE"))
+		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE")
 
 	def delete_reaction(self,reaction,user_id=None):
 		if user_id:
-			asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE"))
+			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE")
 		else:
-			asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}","DELETE"))
+			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}","DELETE")
 
 
 class User(API_Element):
@@ -241,7 +241,7 @@ class User(API_Element):
 		return self.name
 
 	def create_dm(self):
-		return Channel(asyncio.run(self.__bot.api_call(f"/users/@me/channels","POST",json={"recipient_id":self.id})),self.__bot)
+		return Channel(self.__bot.api(f"/users/@me/channels","POST",json={"recipient_id":self.id}),self.__bot)
 
 class Member(User):
 
@@ -260,27 +260,28 @@ class Member(User):
 	def edit(self, **modifs):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/messages/{user_id}","PATCH",json=modifs))
+			self.__bot.api(f"/channels/{self.guild_id}/messages/{user_id}","PATCH",json=modifs)
 
 	def kick(self):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}","DELETE"))
+			delete_member = self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}","DELETE")
+			return x
 
 	def ban(self, reason=None):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/bans/{user_id}","PUT", json={"reason":reason}))
+			self.__bot.api(f"/guilds/{self.guild_id}/bans/{user_id}","PUT", json={"reason":reason})
 
 	def add_role(self, role):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","PUT"))
+			self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","PUT")
 
 	def remove_role(self, role):
 		if hasattr(self,"id"):
 			user_id=self.id
-			asyncio.run(self.__bot.api_call(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","DELETE"))
+			self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","DELETE")
 
 class Reaction(API_Element):
 
@@ -314,10 +315,10 @@ class Role(API_Element):
 		return self.name
 
 	def delete(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/roles/{self.id}","DELETE"))
+		self.__bot.api(f"/channels/{self.guild_id}/roles/{self.id}","DELETE")
 
 	def edit(self,**modifs):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.guild_id}/messages/{self.id}","PATCH",json=modifs))
+		self.__bot.api(f"/channels/{self.guild_id}/messages/{self.id}","PATCH",json=modifs)
 
 
 class Attachment(API_Element):
@@ -426,7 +427,7 @@ class Invite(API_Element):
 		return self.url
 
 	def delete(self):
-		asyncio.run(self.__bot.api_call(f"/invites/{self.code}","DELETE"))
+		self.__bot.api(f"/invites/{self.code}","DELETE")
 
 class Ban(API_Element):
 
@@ -436,7 +437,7 @@ class Ban(API_Element):
 		self.__bot = bot
 
 	def pardon(self, guild_id):
-		asyncio.run(self.__bot.api_call(f"/guilds/{guild_id}/bans/{self.user.id}","DELETE"))
+		self.__bot.api(f"/guilds/{guild_id}/bans/{self.user.id}","DELETE")
 
 class Overwrite(API_Element):
 
@@ -449,7 +450,7 @@ class Overwrite(API_Element):
 		self.__bot = bot
 
 	def edit(self,**modifs):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel.id}/permissions/{self.id}","PUT",json=modifs))
+		self.__bot.api(f"/channels/{self.channel.id}/permissions/{self.id}","PUT",json=modifs)
 
 	def delete(self):
-		asyncio.run(self.__bot.api_call(f"/channels/{self.channel.id}/permissions/{self.id}","DELETE"))
+		self.__bot.api(f"/channels/{self.channel.id}/permissions/{self.id}","DELETE")

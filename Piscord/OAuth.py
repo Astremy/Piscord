@@ -23,14 +23,14 @@ class OAuth:
 			"scope": self.scope
 		}
 
-		return asyncio.run(self.bot.api_call("/oauth2/token","POST",data=data))
+		return self.__bot.api("/oauth2/token","POST",data=data)
 
 	def __request_token(self,token,url):
 		headers = {
 			"Authorization": f"Bearer {json.loads(token)['access_token']}"
 		}
 
-		return asyncio.run(self.bot.api_call(url,"GET",headers=headers))
+		return self.__bot.api(url,"GET",headers=headers)
 
 	def get_user(self,token):
 		if "identify" in self.scope:
