@@ -28,7 +28,7 @@ class Events:
 				self.__bot = bot
 
 			def get_message(self):
-				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
+				return Message(self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),self.__bot)
 
 			def delete(self):
 				if self.id == self.__bot.get_self_user().id:
@@ -48,7 +48,7 @@ class Events:
 				self.__bot = bot
 
 			def get_message(self):
-				return Message(asyncio.run(self.__bot.api_call(f"/channels/{self.channel_id}/messages/{self.message_id}")),self.__bot)
+				return Message(self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),self.__bot)
 
 		@self.def_event("CHANNEL_CREATE","channel_create")
 		class Event(Channel):

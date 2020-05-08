@@ -3,30 +3,31 @@ import json
 import aiohttp
 from threading import Thread
 from .Events import Events
+from .Errors import *
 from .API_Elements import *
 
 class Utility:
 
 	def get_self_user(self):
-		return User(asyncio.run(self.api_call("/users/@me", "GET")), self)
+		return User(self.api("/users/@me", "GET"), self)
 
 	def get_self_guilds(self):
-		return [Guild(guild,self) for guild in asyncio.run(self.api_call("/users/@me/guilds", "GET"))]
+		return [Guild(guild,self) for guild in self.api("/users/@me/guilds", "GET")]
 
 	def send_message(self,channel,**kwargs):
-		return Message(asyncio.run(self.api_call(f"/channels/{channel}/messages", "POST", json=kwargs)),self)
+		return Message(self.api(f"/channels/{channel}/messages", "POST", json=kwargs),self)
 
 	def get_guild(self,guild_id):
-		return Guild(asyncio.run(self.api_call(f"/guilds/{guild_id}","GET")),self)
+		return Guild(self.api(f"/guilds/{guild_id}","GET"),self)
 
 	def get_channel(self,channel_id):
-		return Channel(asyncio.run(self.api_call(f"/channels/{channel_id}","GET")),self)
+		return Channel(self.api(f"/channels/{channel_id}","GET"),self)
 
 	def get_user(self,user_id):
-		return User(asyncio.run(self.api_call(f"/users/{user_id}")), self)
+		return User(self.api(f"/users/{user_id}"), self)
 
 	def get_invite(self, invite_code):
-		return Invite(asyncio.run(self.api_call(f"/invites/{invite_code}","GET", params={"with_counts":"true"})),self)
+		return Invite(self.api(f"/invites/{invite_code}","GET", params={"with_counts":"true"}),self)
 
 class Bot(Thread,Utility,Events):
 
@@ -36,9 +37,10 @@ class Bot(Thread,Utility,Events):
 		Thread.__init__(self)
 		Utility.__init__(self)
 		self.token=token
-		self.api="https://discord.com/api"
+		self.api_url="https://discord.com/api"
 		self.__last_sequence = ""
 		self.events = {}
+		self.is_stopped = False
 
 	def def_event(self,event,name):
 		def add_event(function):
@@ -69,11 +71,28 @@ class Bot(Thread,Utility,Events):
 		}
 		kwargs = dict(defaults, **kwargs)
 		async with aiohttp.ClientSession() as session:
-			async with session.request(method, self.api+path,**kwargs) as response:
+			async with session.request(method, self.api_url+path,**kwargs) as response:
 				try:
-					assert 200 == response.status, response.reason
-					return await response.json()
-				except:...
+					assert response.status in [200,204]
+					if response.status == 200:
+						return await response.json()
+				except:
+					if response.status == 400:
+						return BadRequestError()
+					elif response.status == 403:
+						return PermissionsError()
+					else:
+						return Error()
+
+	def api(self, path, method="GET", **kwargs):
+		loop = asyncio.new_event_loop()
+		output = loop.run_until_complete(self.api_call(path,method,**kwargs))
+		loop.run_until_complete(asyncio.sleep(0.050))
+		loop.close()
+		if output and isinstance(output,Error):
+			raise output
+		else:
+			return output
 
 	async def begin(self):
 		response = await self.api_call("/gateway")
@@ -84,10 +103,14 @@ class Bot(Thread,Utility,Events):
 		async with aiohttp.ClientSession() as session:
 			async with session.ws_connect(f"{url}?v=6&encoding=json") as ws:
 				async for msg in ws:
+					if self.is_stopped:
+						await ws.close()
+						self.heartbeat.cancel()
+						return
 					data = json.loads(msg.data)
 
 					if data["op"] == 10:
-						asyncio.create_task(self.__heartbeat(ws,data["d"]["heartbeat_interval"]))
+						self.heartbeat = asyncio.create_task(self.__heartbeat(ws,data["d"]["heartbeat_interval"]))
 						await ws.send_json({
 							"op": 2,
 							"d": {
@@ -113,15 +136,11 @@ class Bot(Thread,Utility,Events):
 		self.loop = asyncio.new_event_loop()
 		try:
 			self.loop.run_until_complete(self.begin())
-		except RuntimeError:print("Bot éteint")
+		except RuntimeError:
+			print("Bot éteint")
 
 	def stop(self):
-		try:
-			self.loop.stop()
-		except:...
-		try:
-			for x in asyncio.all_tasks():
-				try:
-					x.cancel()
-				except:...
-		except:...
+		self.is_stopped = True
+		#try:
+		#	self.loop.stop()
+		#except:...
