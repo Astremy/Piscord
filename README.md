@@ -10,8 +10,8 @@ It thus allows to do much more easily various things like bot control panels.
 
 Thus, in all the examples, Piscord is used with [SAPAS](https://github.com/Astremy/SAPAS).
 
-How to use it :
-Just put it in your project folder and then import it.
+#### How to use it
+You can install it with pip : pip install Piscord
 
 Used Modules :
 - asyncio
