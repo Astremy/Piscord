@@ -1,5 +1,3 @@
-import asyncio
-
 class API_Element:
 
 	def to_json(self):
@@ -162,7 +160,7 @@ class Message(API_Element):
 		self.author = User(message["author"],bot)
 		if "member" in message:
 			self.author = Member({**message["member"],"user":{**message["author"]},"guild_id":self.guild_id}, bot)
-		self.content = message["content"]
+		self.content = message.get("content",None)
 		self.timestamp = message["timestamp"]
 		self.edited_timestamp = message.get("edited_timestamp",None)
 		self.tts = message["tts"]
