@@ -10,6 +10,9 @@ It thus allows to do much more easily various things like bot control panels.
 
 Thus, in all the examples, Piscord is used with [SAPAS](https://github.com/Astremy/SAPAS).
 
+### Documentation
+[Piscord Documentation](https://piscord.astremy.com/) (Only in French for the moment)
+
 #### How to use it
 You can install it with pip : pip install Piscord
 
