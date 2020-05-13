@@ -31,12 +31,14 @@ class Utility:
 
 class Bot(Thread,Utility,Events):
 
-	def __init__(self,token):
+	def __init__(self,token,api_sleep=0.05):
 		self.events_list = {}
 		Events.__init__(self)
 		Thread.__init__(self)
 		Utility.__init__(self)
+		Bot_Element.__init__(self,{},self)
 		self.token=token
+		self.api_sleep = api_sleep
 		self.api_url="https://discord.com/api"
 		self.__last_sequence = ""
 		self.events = {}
@@ -87,7 +89,7 @@ class Bot(Thread,Utility,Events):
 	def api(self, path, method="GET", **kwargs):
 		loop = asyncio.new_event_loop()
 		output = loop.run_until_complete(self.api_call(path,method,**kwargs))
-		loop.run_until_complete(asyncio.sleep(0.050))
+		loop.run_until_complete(asyncio.sleep(self.api_sleep))
 		loop.close()
 		if output and isinstance(output,Error):
 			raise output
@@ -122,8 +124,9 @@ class Bot(Thread,Utility,Events):
 					elif data["op"] == 0:
 						if data["t"] in events:
 							event = events[data["t"]]
+							output = event[1](self,data["d"])
 							if event[0] in self.events:
-								x = Thread(target=self.events[event[0]],args=(event[1](self,data["d"]),))
+								x = Thread(target=self.events[event[0]],args=(output,))
 								x.start()
 						self.__last_sequence=data["s"]
 
@@ -134,13 +137,11 @@ class Bot(Thread,Utility,Events):
 
 	def run(self):
 		self.loop = asyncio.new_event_loop()
+		print("Starting Bot")
 		try:
 			self.loop.run_until_complete(self.begin())
 		except RuntimeError:
-			print("Bot éteint")
+			print("Stopping Bot")
 
 	def stop(self):
 		self.is_stopped = True
-		#try:
-		#	self.loop.stop()
-		#except:...

@@ -3,7 +3,8 @@ class API_Element:
 	def to_json(self):
 		output = {}
 		for x,y in self.__dict__.items():
-			if y:
+			if x.endswith("__bot"):continue
+			if y != None:
 				if type(y) == list:
 					e=[]
 					for p in y:
@@ -16,11 +17,20 @@ class API_Element:
 				output[x]=y
 		return output
 
+class Bot_Element(API_Element):
+
+	def __init__(self, bot_element, bot):
+		self.user = User(bot_element.get("user",{}), bot)
+		self.guilds = [Guild(guild, bot) for guild in bot_element.get("guilds",[])]
+		self.relationships = bot_element.get("relationships",[])
+		self.private_channels = bot_element.get("private_channels",[])
+		self.presences = bot_element.get("presences",[])
+
 class Guild(API_Element):
 
 	def __init__(self, guild, bot):
-		self.id = guild["id"]
-		self.name = guild["name"]
+		self.id = guild.get("id",None)
+		self.name = guild.get("name",None)
 		self.icon = guild.get("icon",None)
 		self.splash = guild.get("splash",None)
 		self.discovery_splash = guild.get("discovery_splash",None)
@@ -55,6 +65,7 @@ class Guild(API_Element):
 		self.presences = guild.get("presences",[]) # To Do
 		self.max_presences = guild.get("max_presences",None)
 		self.max_members = guild.get("max_members",None)
+		self.max_video_channel_users = guild.get("max_video_channel_users",None)
 		self.vanity_url_code = guild.get("vanity_url_code",None)
 		self.description = guild.get("description",None)
 		self.banner = guild.get("banner",None)
@@ -67,7 +78,12 @@ class Guild(API_Element):
 		self.__bot = bot
 
 	def __repr__(self):
-		return self.name
+		if self.name:
+			return self.name
+		elif self.id:
+			return self.id
+		else:
+			return "Guild"
 
 	def get_channels(self):
 		channels = self.__bot.api(f"/guilds/{self.id}/channels")
@@ -110,7 +126,7 @@ class Channel(API_Element):
 		self.type = channel["type"]
 		self.guild_id = channel.get("guild_id",None)
 		self.position = channel.get("position",None)
-		self.permission_overwrites = [Overwrite(overwrite,bot,self) for overwrite in channel.get("permission_overwrites",[])]
+		self.permission_overwrites = [Overwrite(overwrite,bot,self.id) for overwrite in channel.get("permission_overwrites",[])]
 		self.name = channel.get("name",None)
 		self.topic = channel.get("topic",None)
 		self.nsfw = channel.get("nsfw",None)
@@ -174,7 +190,7 @@ class Message(API_Element):
 		self.embeds = [Embed(embed) for embed in message["embeds"]]
 		self.reactions = []
 		if "reactions" in message:
-			self.reactions = [Reaction(reaction,self) for reaction in message["reactions"]]
+			self.reactions = [Reaction(reaction,self.id) for reaction in message["reactions"]]
 		self.nonce = message.get("nonce",None)
 		self.pinned = message["pinned"]
 		self.webhook_id = message.get("webhook_id",None)
@@ -222,16 +238,16 @@ class User(API_Element):
 		self.flags = user.get("flags",None)
 		self.premium_type = user.get("premium_type",None)
 		self.public_flags = user.get("public_flags",None)
-		self.id = user["id"]
-		self.name = user["username"]
-		self.discriminator = user["discriminator"]
-		self.avatar = None
-		if user["avatar"]:
-			if user["avatar"].startswith("a_"):
+		self.id = user.get("id",None)
+		self.name = user.get("username",None)
+		self.discriminator = user.get("discriminator",None)
+		self.avatar = user.get("avatar",None)
+		if self.avatar:
+			if self.avatar.startswith("a_"):
 				avatar_type = ".gif"
 			else:
 				avatar_type = ".png"
-			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{user['avatar']}{avatar_type}"
+			self.avatar = f"https://cdn.discordapp.com/avatars/{self.id}/{self.avatar}{avatar_type}"
 		self.mention = f"<@{self.id}>"
 		self.__bot = bot
 
@@ -244,11 +260,13 @@ class User(API_Element):
 class Member(User):
 
 	def __init__(self, member, bot):
+		#self.user = User(member["user"],bot)
 		if "user" in member:
 			User.__init__(self,member["user"],bot)
 		self.guild_id = member.get("guild_id",None)
 		self.premium_since = member.get("premium_since",None)
 		self.roles = [role for role in member["roles"]]
+		self.hoisted_role = member.get("hoisted_role",None)
 		self.mute = member["mute"]
 		self.deaf = member["deaf"]
 		self.nick = member.get("nick",None)
@@ -283,17 +301,24 @@ class Member(User):
 
 class Reaction(API_Element):
 
-	def __init__(self,reaction,message):
+	def __init__(self,reaction,message_id):
 		self.count = reaction["count"]
 		self.me = reaction["me"]
 		self.emoji = Emoji(reaction["emoji"])
-		self.message = message
+		self.message_id = message_id
 
 class Emoji(API_Element):
 
 	def __init__(self,emoji):
 		self.name = emoji["name"]
 		self.id = emoji["id"]
+		self.roles = emoji.get("roles",None)
+		self.user = emoji.get("user",None)
+		self.require_colons = emoji.get("require_colons",None)
+		self.managed = emoji.get("managed",None)
+		self.animated = emoji.get("animated",None)
+		self.available = emoji.get("available",None)
+
 
 class Role(API_Element):
 
@@ -439,16 +464,16 @@ class Ban(API_Element):
 
 class Overwrite(API_Element):
 
-	def __init__(self,overwrite,bot,channel):
+	def __init__(self,overwrite,bot,channel_id):
 		self.id = overwrite["id"]
 		self.type = overwrite["type"]
 		self.allow = overwrite["allow"]
 		self.deny = overwrite["deny"]
-		self.channel = channel
+		self.channel_id = channel_id
 		self.__bot = bot
 
 	def edit(self,**modifs):
-		self.__bot.api(f"/channels/{self.channel.id}/permissions/{self.id}","PUT",json=modifs)
+		self.__bot.api(f"/channels/{self.channel_id}/permissions/{self.id}","PUT",json=modifs)
 
 	def delete(self):
-		self.__bot.api(f"/channels/{self.channel.id}/permissions/{self.id}","DELETE")
+		self.__bot.api(f"/channels/{self.channel_id}/permissions/{self.id}","DELETE")
