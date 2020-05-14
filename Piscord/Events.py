@@ -1,18 +1,6 @@
 from .API_Elements import *
 from time import time
 
-class Cache:
-	def __init__(self, func):
-		self.func = func
-		self.result = None
-
-	def __call__(self,ref):
-		if self.result:
-			return self.result
-		result = self.func(ref)
-		self.result = result
-		return result
-
 class Events:
 	def __init__(self):
 
@@ -31,6 +19,36 @@ class Events:
 		class Event(Message):
 
 			def __init__(self, bot, data):
+				Message.__init__(self, data, bot)
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for channel in guild.channels:
+							if channel.id == self.channel_id:
+								self.channel = channel
+								break
+						break
+
+		@self.def_event("MESSAGE_UPDATE","message_update")
+		class Event(Message):
+
+			def __init__(self, data, bot):
+				Message.__init__(self, data, bot)
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for channel in guild.channels:
+							if channel.id == self.channel_id:
+								self.channel = channel
+								break
+						break
+
+		@self.def_event("MESSAGE_DELETE","message_delete")
+		class Event(Message):
+
+			def __init__(self, data, bot):
 				Message.__init__(self, data, bot)
 
 				for guild in bot.guilds:
@@ -119,6 +137,20 @@ class Events:
 						guild.channels.append(self)
 						break
 
+		@self.def_event("CHANNEL_UPDATE","channel_update")
+		class Event(Channel):
+
+			def __init__(self, bot, data):
+				Channel.__init__(self, data, bot)
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for i in range(len(guild.channels)):
+							if guild.channels[i].id == self.id:
+								guild.channels[i] = self
+								break
+						break
 
 		@self.def_event("CHANNEL_DELETE","channel_delete")
 		class Event(Channel):
@@ -135,21 +167,6 @@ class Events:
 								break
 						break
 
-		@self.def_event("CHANNEL_UPDATE","channel_update")
-		class Event(Channel):
-
-			def __init__(self, bot, data):
-				Channel.__init__(self, data, bot)
-
-				for guild in bot.guilds:
-					if guild.id == self.guild_id:
-						self.guild = guild
-						for i in range(len(guild.channels)):
-							if guild.channels[i].id == self.id:
-								guild.channels[i] = self
-								break
-						break
-
 		@self.def_event("GUILD_MEMBER_ADD","member_join")
 		class Event(Member):
 
@@ -162,6 +179,19 @@ class Events:
 						guild.members.append(self)
 						break
 
+		@self.def_event("GUILD_MEMBER_UPDATE","member_update")
+		class Event(Member):
+			def __init__(self, bot, data):
+				Member.__init__(self,data,bot)
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for i in range(len(guild.members)):
+							if guild.members[i].id == self.id:
+								guild.members[i] = self
+								break
+						break
 
 		@self.def_event("GUILD_MEMBER_REMOVE","member_quit")
 		class Event(User):
@@ -183,14 +213,47 @@ class Events:
 		class Event(Role):
 
 			def __init__(self, bot, data):
-				Role.__init__(self, data, bot)
+				Role.__init__(self, data["role"], bot)
+				self.guild_id = data["guild_id"]
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						guild.roles.append(self)
+						break
+
+		@self.def_event("GUILD_ROLE_UPDATE","role_update")
+		class Event(Role):
+			def __init__(self, bot, data):
+				Role.__init__(self, data["role"], bot)
+				self.guild_id = data["guild_id"]
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for i in range(len(guild.roles)):
+							if guild.roles[i].id == self.id:
+								guild.roles[i] = self
+								break
+						break
 
 		@self.def_event("GUILD_ROLE_DELETE","role_delete")
 		class Event:
 
 			def __init__(self, bot, data):
 				self.guild_id = data["guild_id"]
-				self.role_id = data["role_id"]
+				self.id = data["role_id"]
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for role in guild.roles:
+							if role.id == self.id:
+								for x,y in role.__dict__.items():
+									setattr(self,x,y)
+								guild.roles.remove(role)
+								break
+						break
 
 		@self.def_event("INVITE_CREATE","invite_create")
 		class Event(Invite):
@@ -200,10 +263,35 @@ class Events:
 				self.guild_id = data.get("guild_id",None)
 				Invite.__init__(self, data, bot)
 
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for channel in guild.channels:
+							if channel.id == self.channel_id:
+								self.channel = channel
+								channel.invites.append(self)
+								break
+						break
+
 		@self.def_event("INVITE_DELETE","invite_delete")
-		class Event:
+		class Event(Invite):
 
 			def __init__(self, bot, data):
-				self.code = data["code"]
 				self.channel_id = data["channel_id"]
 				self.guild_id = data.get("guild_id",None)
+				Invite.__init__(self, data, bot)
+
+				for guild in bot.guilds:
+					if guild.id == self.guild_id:
+						self.guild = guild
+						for channel in guild.channels:
+							if channel.id == self.channel_id:
+								self.channel = channel
+								for invite in channel.invites:
+									if invite.code == self.code:
+										for x,y in invite.__dict__.items():
+											setattr(self,x,y)
+										channel.invites.remove(invite)
+										break
+								break
+						break

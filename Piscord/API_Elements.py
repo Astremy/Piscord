@@ -1,4 +1,18 @@
+class Cache:
+	def __init__(self, func):
+		self.func = func
+		self.result = None
+
+	def __call__(self,ref):
+		if self.result:
+			return self.result
+		result = self.func(ref)
+		self.result = result
+		return result
+
 class API_Element:
+
+	'''
 
 	def to_json(self):
 		output = {}
@@ -16,6 +30,8 @@ class API_Element:
 					y = y.to_json()
 				output[x]=y
 		return output
+
+	'''
 
 class Bot_Element(API_Element):
 
@@ -142,6 +158,7 @@ class Channel(API_Element):
 		self.application_id = channel.get("application_id",None)
 		self.parent_id = channel.get("parent_id",None)
 		self.last_pin_timestamp = channel.get("last_pin_timestamp",None)
+		self.invites = channel.get("invites",[])
 		self.__bot = bot
 
 	def __repr__(self):
@@ -150,8 +167,8 @@ class Channel(API_Element):
 	def edit(self,**modifs):
 		self.__bot.api(f"/channels/{self.id}","PATCH",json=modifs)
 
-	def send(self,**kwargs):
-		return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", json=kwargs),self.__bot)
+	def send(self,content=None,**kwargs):
+		return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", json={"content":content,**kwargs}),self.__bot)
 
 	def get_messages(self):
 		messages = self.__bot.api(f"/channels/{self.id}/messages")
@@ -254,7 +271,9 @@ class User(API_Element):
 	def __repr__(self):
 		return self.name
 
-	def create_dm(self):
+	@property
+	@Cache
+	def dm(self):
 		return Channel(self.__bot.api(f"/users/@me/channels","POST",json={"recipient_id":self.id}),self.__bot)
 
 class Member(User):
