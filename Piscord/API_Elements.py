@@ -12,8 +12,6 @@ class Cache:
 
 class API_Element:
 
-	'''
-
 	def to_json(self):
 		output = {}
 		for x,y in self.__dict__.items():
@@ -31,9 +29,8 @@ class API_Element:
 				output[x]=y
 		return output
 
-	'''
 
-class Bot_Element(API_Element):
+class Bot_Element:
 
 	def __init__(self, bot_element, bot):
 		self.user = User(bot_element.get("user",{}), bot)
@@ -41,8 +38,9 @@ class Bot_Element(API_Element):
 		self.relationships = bot_element.get("relationships",[])
 		self.private_channels = bot_element.get("private_channels",[])
 		self.presences = bot_element.get("presences",[])
+		self.voices = {}
 
-class Guild(API_Element):
+class Guild:
 
 	def __init__(self, guild, bot):
 		self.id = guild.get("id",None)
@@ -135,9 +133,9 @@ class Guild(API_Element):
 		''' kwargs : https://discord.com/developers/docs/resources/guild#create-guild-role '''
 		return Role(self.__bot.api(f"/guilds/{self.id}/roles", "POST", json=kwargs),self.__bot)
 
-class Channel(API_Element):
+class Channel:
 
-	def __init__(self,channel,bot):
+	def __init__(self, channel, bot):
 		self.id = channel["id"]
 		self.type = channel["type"]
 		self.guild_id = channel.get("guild_id",None)
@@ -162,7 +160,8 @@ class Channel(API_Element):
 		self.__bot = bot
 
 	def __repr__(self):
-		return self.name
+		if self.name: return self.name
+		else: return self.id
 
 	def edit(self,**modifs):
 		self.__bot.api(f"/channels/{self.id}","PATCH",json=modifs)
@@ -184,13 +183,14 @@ class Channel(API_Element):
 	def typing(self):
 		self.__bot.api(f"/channels/{self.id}/typing","POST")
 
-class Message(API_Element):
+class Message:
 
 	def __init__(self, message, bot):
 		self.id = message["id"]
 		self.channel_id = message["channel_id"]
 		self.guild_id = message.get("guild_id",None)
-		self.author = User(message["author"],bot)
+		if "author" in message:
+			self.author = User(message["author"],bot)
 		if "member" in message:
 			self.author = Member({**message["member"],"user":{**message["author"]},"guild_id":self.guild_id}, bot)
 		self.content = message.get("content",None)
@@ -218,6 +218,12 @@ class Message(API_Element):
 		self.flags = message.get("flags",None)
 		self.__bot = bot
 
+		self.guild = bot.get_element(bot.guilds, self.guild_id)
+		if self.guild:
+			self.channel = bot.get_element(self.guild.channels, self.channel_id)
+		else:
+			self.channel = bot.get_element(bot.private_channels, self.channel_id)
+
 	def __repr__(self):
 		return self.content
 
@@ -243,7 +249,7 @@ class Message(API_Element):
 			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}","DELETE")
 
 
-class User(API_Element):
+class User:
 
 	def __init__(self, user, bot):
 		self.bot = user.get("bot",None)
@@ -279,17 +285,16 @@ class User(API_Element):
 class Member(User):
 
 	def __init__(self, member, bot):
-		#self.user = User(member["user"],bot)
 		if "user" in member:
 			User.__init__(self,member["user"],bot)
 		self.guild_id = member.get("guild_id",None)
 		self.premium_since = member.get("premium_since",None)
 		self.roles = [role for role in member["roles"]]
 		self.hoisted_role = member.get("hoisted_role",None)
-		self.mute = member["mute"]
-		self.deaf = member["deaf"]
+		self.mute = member.get("mute")
+		self.deaf = member.get("deaf")
 		self.nick = member.get("nick",None)
-		self.joined_at = member["joined_at"]
+		self.joined_at = member.get("joined_at")
 		self.__bot = bot
 
 	def edit(self, **modifs):
@@ -301,7 +306,6 @@ class Member(User):
 		if hasattr(self,"id"):
 			user_id=self.id
 			delete_member = self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}","DELETE")
-			return x
 
 	def ban(self, reason=None):
 		if hasattr(self,"id"):
@@ -318,7 +322,7 @@ class Member(User):
 			user_id=self.id
 			self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}/roles/{role.id}","DELETE")
 
-class Reaction(API_Element):
+class Reaction:
 
 	def __init__(self,reaction,message_id):
 		self.count = reaction["count"]
@@ -326,7 +330,7 @@ class Reaction(API_Element):
 		self.emoji = Emoji(reaction["emoji"])
 		self.message_id = message_id
 
-class Emoji(API_Element):
+class Emoji:
 
 	def __init__(self,emoji):
 		self.name = emoji["name"]
@@ -339,7 +343,7 @@ class Emoji(API_Element):
 		self.available = emoji.get("available",None)
 
 
-class Role(API_Element):
+class Role:
 
 	def __init__(self, role, bot):
 		self.id = role.get("id",None)
@@ -363,7 +367,7 @@ class Role(API_Element):
 		self.__bot.api(f"/channels/{self.guild_id}/messages/{self.id}","PATCH",json=modifs)
 
 
-class Attachment(API_Element):
+class Attachment:
 
 	def __init__(self,attachment):
 		self.id = attachment["id"]
@@ -374,7 +378,7 @@ class Attachment(API_Element):
 		self.height = attachment.get("height",None)
 		self.width = attachment.get("width",None)
 
-class Allowed_Mentions(API_Element):
+class Allowed_Mentions:
 
 	def __init__(self,mentions):
 		self.parse = mentions.get("parse",None)
@@ -438,7 +442,7 @@ class Embed_Author(API_Element):
 		self.icon_url = author.get("icon_url",None)
 		self.proxy_icon_url = author.get("proxy_icon_url",None)
 
-class Invite(API_Element):
+class Invite:
 
 	def __init__(self, invite, bot):
 		self.code = invite["code"]
@@ -471,7 +475,7 @@ class Invite(API_Element):
 	def delete(self):
 		self.__bot.api(f"/invites/{self.code}","DELETE")
 
-class Ban(API_Element):
+class Ban:
 
 	def __init__(self,ban,bot):
 		self.reason = ban.get("reason",None)
@@ -481,7 +485,7 @@ class Ban(API_Element):
 	def pardon(self, guild_id):
 		self.__bot.api(f"/guilds/{guild_id}/bans/{self.user.id}","DELETE")
 
-class Overwrite(API_Element):
+class Overwrite:
 
 	def __init__(self,overwrite,bot,channel_id):
 		self.id = overwrite["id"]
