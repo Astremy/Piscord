@@ -43,52 +43,52 @@ class Bot_Element:
 class Guild:
 
 	def __init__(self, guild, bot):
-		self.id = guild.get("id",None)
-		self.name = guild.get("name",None)
-		self.icon = guild.get("icon",None)
-		self.splash = guild.get("splash",None)
-		self.discovery_splash = guild.get("discovery_splash",None)
-		self.owner = guild.get("owner",None)
-		self.owner_id = guild.get("owner_id",None)
-		self.permissions = guild.get("permissions",None)
-		self.region = guild.get("region",None)
-		self.afk_channel_id = guild.get("afk_channel_id",None)
-		self.afk_timeout = guild.get("afk_timeout",None)
-		self.embed_enabled = guild.get("embed_enabled",None)
-		self.embed_channel_id = guild.get("embed_channel_id",None)
-		self.verification_level = guild.get("verification_level",None)
-		self.default_message_notifications = guild.get("default_message_notifications",None)
-		self.explicit_content_filter = guild.get("explicit_content_filter",None)
+		self.id = guild.get("id")
+		self.name = guild.get("name")
+		self.icon = guild.get("icon")
+		self.splash = guild.get("splash")
+		self.discovery_splash = guild.get("discovery_splash")
+		self.owner = guild.get("owner")
+		self.owner_id = guild.get("owner_id")
+		self.permissions = guild.get("permissions")
+		self.region = guild.get("region")
+		self.afk_channel_id = guild.get("afk_channel_id")
+		self.afk_timeout = guild.get("afk_timeout")
+		self.embed_enabled = guild.get("embed_enabled")
+		self.embed_channel_id = guild.get("embed_channel_id")
+		self.verification_level = guild.get("verification_level")
+		self.default_message_notifications = guild.get("default_message_notifications")
+		self.explicit_content_filter = guild.get("explicit_content_filter")
 		self.roles = [Role(role,bot) for role in guild.get("roles",[])]
 		self.emojis = [Emoji(emoji) for emoji in guild.get("emojis",[])]
 		self.features = guild.get("features",[]) #To Do
-		self.mfa_level = guild.get("mfa_level",None)
-		self.application_id = guild.get("application_id",None)
-		self.widget_enabled = guild.get("widget_enabled",None)
-		self.widget_channel_id = guild.get("widget_channel_id",None)
-		self.system_channel_id = guild.get("system_channel_id",None)
-		self.system_channel_flags = guild.get("system_channel_flags",None)
-		self.rules_channel_id = guild.get("rules_channel_id",None)
-		self.joined_at = guild.get("joined_at",None)
-		self.large = guild.get("large",None)
-		self.unavailable = guild.get("unavailable",None)
-		self.member_count = guild.get("member_count",None)
-		self.voice_states = guild.get("voice_states",None)
+		self.mfa_level = guild.get("mfa_level")
+		self.application_id = guild.get("application_id")
+		self.widget_enabled = guild.get("widget_enabled")
+		self.widget_channel_id = guild.get("widget_channel_id")
+		self.system_channel_id = guild.get("system_channel_id")
+		self.system_channel_flags = guild.get("system_channel_flags")
+		self.rules_channel_id = guild.get("rules_channel_id")
+		self.joined_at = guild.get("joined_at")
+		self.large = guild.get("large")
+		self.unavailable = guild.get("unavailable")
+		self.member_count = guild.get("member_count")
+		self.voice_states = guild.get("voice_states")
 		self.members = [Member(member,bot) for member in guild.get("members",[])]
 		self.channels = [Channel(channel,bot) for channel in guild.get("channels",[])]
 		self.presences = guild.get("presences",[]) # To Do
-		self.max_presences = guild.get("max_presences",None)
-		self.max_members = guild.get("max_members",None)
-		self.max_video_channel_users = guild.get("max_video_channel_users",None)
-		self.vanity_url_code = guild.get("vanity_url_code",None)
-		self.description = guild.get("description",None)
-		self.banner = guild.get("banner",None)
-		self.premium_tier = guild.get("premium_tier",None)
-		self.premium_subscription_count = guild.get("premium_subscription_count",None)
-		self.preferred_locale = guild.get("preferred_locale",None)
-		self.public_updates_channel_id = guild.get("public_updates_channel_id",None)
-		self.approximate_member_count = guild.get("approximate_member_count",None)
-		self.approximate_presence_count = guild.get("approximate_presence_count",None)
+		self.max_presences = guild.get("max_presences")
+		self.max_members = guild.get("max_members")
+		self.max_video_channel_users = guild.get("max_video_channel_users")
+		self.vanity_url_code = guild.get("vanity_url_code")
+		self.description = guild.get("description")
+		self.banner = guild.get("banner")
+		self.premium_tier = guild.get("premium_tier")
+		self.premium_subscription_count = guild.get("premium_subscription_count")
+		self.preferred_locale = guild.get("preferred_locale")
+		self.public_updates_channel_id = guild.get("public_updates_channel_id")
+		self.approximate_member_count = guild.get("approximate_member_count")
+		self.approximate_presence_count = guild.get("approximate_presence_count")
 		self.__bot = bot
 
 	def __repr__(self):
@@ -136,26 +136,24 @@ class Guild:
 class Channel:
 
 	def __init__(self, channel, bot):
-		self.id = channel["id"]
-		self.type = channel["type"]
-		self.guild_id = channel.get("guild_id",None)
-		self.position = channel.get("position",None)
+		self.id = channel.get("id")
+		self.type = channel.get("type")
+		self.guild_id = channel.get("guild_id")
+		self.position = channel.get("position")
 		self.permission_overwrites = [Overwrite(overwrite,bot,self.id) for overwrite in channel.get("permission_overwrites",[])]
-		self.name = channel.get("name",None)
-		self.topic = channel.get("topic",None)
-		self.nsfw = channel.get("nsfw",None)
-		self.last_message_id = channel.get("last_message_id",None)
-		self.bitrate = channel.get("bitrate",None)
-		self.user_limit = channel.get("user_limit",None)
-		self.rate_limit_per_user = channel.get("rate_limit_per_user",None)
-		self.recipients = channel.get("recipients",None)
-		if "recipients" in channel:
-			self.recipients = [User(user,bot) for user in channel["recipients"]]
-		self.icon = channel.get("icon",None)
-		self.owner_id = channel.get("owner_id",None)
-		self.application_id = channel.get("application_id",None)
-		self.parent_id = channel.get("parent_id",None)
-		self.last_pin_timestamp = channel.get("last_pin_timestamp",None)
+		self.name = channel.get("name")
+		self.topic = channel.get("topic")
+		self.nsfw = channel.get("nsfw")
+		self.last_message_id = channel.get("last_message_id")
+		self.bitrate = channel.get("bitrate")
+		self.user_limit = channel.get("user_limit")
+		self.rate_limit_per_user = channel.get("rate_limit_per_user")
+		self.recipients = [User(user,bot) for user in channel.get("recipients",[])]
+		self.icon = channel.get("icon")
+		self.owner_id = channel.get("owner_id")
+		self.application_id = channel.get("application_id")
+		self.parent_id = channel.get("parent_id")
+		self.last_pin_timestamp = channel.get("last_pin_timestamp")
 		self.invites = channel.get("invites",[])
 		self.__bot = bot
 
@@ -186,36 +184,32 @@ class Channel:
 class Message:
 
 	def __init__(self, message, bot):
-		self.id = message["id"]
-		self.channel_id = message["channel_id"]
-		self.guild_id = message.get("guild_id",None)
+		self.id = message.get("id")
+		self.channel_id = message.get("channel_id")
+		self.guild_id = message.get("guild_id")
 		if "author" in message:
 			self.author = User(message["author"],bot)
 		if "member" in message:
 			self.author = Member({**message["member"],"user":{**message["author"]},"guild_id":self.guild_id}, bot)
-		self.content = message.get("content",None)
-		self.timestamp = message["timestamp"]
-		self.edited_timestamp = message.get("edited_timestamp",None)
-		self.tts = message["tts"]
-		self.mention_everyone = message["mention_everyone"]
-		self.mentions = [User(mention,bot) for mention in message["mentions"]]
-		self.mentions_roles = message["mention_roles"]
-		self.mention_channels = []
-		if "mention_channels" in message:
-			self.mention_channels = [Channel(channel,bot) for channel in message["mention_channels"]]
-		self.attachments = [Attachment(attachment) for attachment in message["attachments"]]
-		self.embeds = [Embed(embed) for embed in message["embeds"]]
-		self.reactions = []
-		if "reactions" in message:
-			self.reactions = [Reaction(reaction,self.id) for reaction in message["reactions"]]
-		self.nonce = message.get("nonce",None)
-		self.pinned = message["pinned"]
-		self.webhook_id = message.get("webhook_id",None)
-		self.type = message["type"]
-		self.activity = message.get("activity",None) # Object
-		self.application = message.get("application",None) #Object
-		self.message_reference = message.get("message_reference",None) #Object
-		self.flags = message.get("flags",None)
+		self.content = message.get("content")
+		self.timestamp = message.get("timestamp")
+		self.edited_timestamp = message.get("edited_timestamp")
+		self.tts = message.get("tts")
+		self.mention_everyone = message.get("mention_everyone")
+		self.mentions = [User(mention,bot) for mention in message.get("mentions")]
+		self.mentions_roles = message.get("mention_roles")
+		self.mention_channels = [Channel(channel,bot) for channel in message.get("mention_channels",[])]
+		self.attachments = [Attachment(attachment) for attachment in message.get("attachments",[])]
+		self.embeds = [Embed(embed) for embed in message.get("embeds",[])]
+		self.reactions = [Reaction(reaction,self.id) for reaction in message.get("reactions",[])]
+		self.nonce = message.get("nonce")
+		self.pinned = message.get("pinned")
+		self.webhook_id = message.get("webhook_id")
+		self.type = message.get("type")
+		self.activity = message.get("activity") # Object
+		self.application = message.get("application") #Object
+		self.message_reference = message.get("message_reference") #Object
+		self.flags = message.get("flags")
 		self.__bot = bot
 
 		self.guild = bot.get_element(bot.guilds, self.guild_id)
@@ -252,19 +246,19 @@ class Message:
 class User:
 
 	def __init__(self, user, bot):
-		self.bot = user.get("bot",None)
-		self.system = user.get("system",None)
-		self.mfa_enabled = user.get("mfa_enabled",None)
-		self.locale = user.get("locale",None)
-		self.verified = user.get("verified",None)
-		self.email = user.get("email",None)
-		self.flags = user.get("flags",None)
-		self.premium_type = user.get("premium_type",None)
-		self.public_flags = user.get("public_flags",None)
-		self.id = user.get("id",None)
-		self.name = user.get("username",None)
-		self.discriminator = user.get("discriminator",None)
-		self.avatar = user.get("avatar",None)
+		self.bot = user.get("bot")
+		self.system = user.get("system")
+		self.mfa_enabled = user.get("mfa_enabled")
+		self.locale = user.get("locale")
+		self.verified = user.get("verified")
+		self.email = user.get("email")
+		self.flags = user.get("flags")
+		self.premium_type = user.get("premium_type")
+		self.public_flags = user.get("public_flags")
+		self.id = user.get("id")
+		self.name = user.get("username")
+		self.discriminator = user.get("discriminator")
+		self.avatar = user.get("avatar")
 		if self.avatar:
 			if self.avatar.startswith("a_"):
 				avatar_type = ".gif"
@@ -287,13 +281,13 @@ class Member(User):
 	def __init__(self, member, bot):
 		if "user" in member:
 			User.__init__(self,member["user"],bot)
-		self.guild_id = member.get("guild_id",None)
-		self.premium_since = member.get("premium_since",None)
-		self.roles = [role for role in member["roles"]]
-		self.hoisted_role = member.get("hoisted_role",None)
+		self.guild_id = member.get("guild_id")
+		self.premium_since = member.get("premium_since")
+		self.roles = [role for role in member.get("roles",[])]
+		self.hoisted_role = member.get("hoisted_role")
 		self.mute = member.get("mute")
 		self.deaf = member.get("deaf")
-		self.nick = member.get("nick",None)
+		self.nick = member.get("nick")
 		self.joined_at = member.get("joined_at")
 		self.__bot = bot
 
@@ -325,36 +319,36 @@ class Member(User):
 class Reaction:
 
 	def __init__(self,reaction,message_id):
-		self.count = reaction["count"]
-		self.me = reaction["me"]
+		self.count = reaction.get("count")
+		self.me = reaction.get("me")
 		self.emoji = Emoji(reaction["emoji"])
 		self.message_id = message_id
 
 class Emoji:
 
 	def __init__(self,emoji):
-		self.name = emoji["name"]
-		self.id = emoji["id"]
-		self.roles = emoji.get("roles",None)
-		self.user = emoji.get("user",None)
-		self.require_colons = emoji.get("require_colons",None)
-		self.managed = emoji.get("managed",None)
-		self.animated = emoji.get("animated",None)
-		self.available = emoji.get("available",None)
+		self.name = emoji.get("name")
+		self.id = emoji.get("id")
+		self.roles = emoji.get("roles")
+		self.user = emoji.get("user")
+		self.require_colons = emoji.get("require_colons")
+		self.managed = emoji.get("managed")
+		self.animated = emoji.get("animated")
+		self.available = emoji.get("available")
 
 
 class Role:
 
 	def __init__(self, role, bot):
-		self.id = role.get("id",None)
-		self.name = role.get("name",None)
-		self.color = role.get("color",None)
-		self.hoist = role.get("hoist",None)
-		self.position = role.get("position",None)
-		self.permissions = role.get("permissions",None)
-		self.managed = role.get("managed",None)
-		self.mentionable = role.get("mentionable",None)
-		self.guild_id = role.get("guild_id",None)
+		self.id = role.get("id")
+		self.name = role.get("name")
+		self.color = role.get("color")
+		self.hoist = role.get("hoist")
+		self.position = role.get("position")
+		self.permissions = role.get("permissions")
+		self.managed = role.get("managed")
+		self.mentionable = role.get("mentionable")
+		self.guild_id = role.get("guild_id")
 		self.__bot = bot
 
 	def __repr__(self):
@@ -370,30 +364,30 @@ class Role:
 class Attachment:
 
 	def __init__(self,attachment):
-		self.id = attachment["id"]
-		self.filename = attachment["filename"]
-		self.size = attachment["size"]
-		self.url = attachment["url"]
-		self.proxy_url = attachment["proxy_url"]
-		self.height = attachment.get("height",None)
-		self.width = attachment.get("width",None)
+		self.id = attachment.get("id")
+		self.filename = attachment.get("filename")
+		self.size = attachment.get("size")
+		self.url = attachment.get("url")
+		self.proxy_url = attachment.get("proxy_url")
+		self.height = attachment.get("height")
+		self.width = attachment.get("width")
 
 class Allowed_Mentions:
 
 	def __init__(self,mentions):
-		self.parse = mentions.get("parse",None)
-		self.roles = mentions.get("roles",None)
-		self.users = mentions.get("users",None)
+		self.parse = mentions.get("parse")
+		self.roles = mentions.get("roles")
+		self.users = mentions.get("users")
 
 class Embed(API_Element):
 
 	def __init__(self,embed):
-		self.title = embed.get("title",None)
-		self.type = embed.get("type",None)
-		self.description = embed.get("description",None)
-		self.url = embed.get("url",None)
-		self.timestamp = embed.get("timestamp",None)
-		self.color = embed.get("color",None)
+		self.title = embed.get("title")
+		self.type = embed.get("type")
+		self.description = embed.get("description")
+		self.url = embed.get("url")
+		self.timestamp = embed.get("timestamp")
+		self.color = embed.get("color")
 		self.footer = Embed_Footer(embed.get("footer",{}))
 		self.image = Embed_Image(embed.get("image",{}))
 		self.thumbnail = Embed_Image(embed.get("thumbnail",{}))
@@ -409,43 +403,43 @@ class Embed(API_Element):
 class Embed_Image(API_Element):
 
 	def __init__(self,image):
-		self.url = image.get("url",None)
-		self.proxy_url = image.get("proxy_url",None)
-		self.height = image.get("height",None)
-		self.width = image.get("width",None)
+		self.url = image.get("url")
+		self.proxy_url = image.get("proxy_url")
+		self.height = image.get("height")
+		self.width = image.get("width")
 
 class Embed_Field(API_Element):
 
 	def __init__(self,field):
-		self.name = field.get("name",None)
-		self.value = field.get("value",None)
-		self.inline = field.get("inline",None)
+		self.name = field.get("name")
+		self.value = field.get("value")
+		self.inline = field.get("inline")
 
 class Embed_Footer(API_Element):
 
 	def __init__(self,footer):
-		self.text = footer.get("text",None)
-		self.icon_url = footer.get("icon_url",None)
-		self.proxy_icon_url = footer.get("proxy_icon_url",None)
+		self.text = footer.get("text")
+		self.icon_url = footer.get("icon_url")
+		self.proxy_icon_url = footer.get("proxy_icon_url")
 
 class Embed_Provider(API_Element):
 
 	def __init__(self,provider):
-		self.name = provider.get("name",None)
-		self.url = provider.get("url",None)
+		self.name = provider.get("name")
+		self.url = provider.get("url")
 
 class Embed_Author(API_Element):
 
 	def __init__(self,author):
-		self.name = author.get("name",None)
-		self.url = author.get("url",None)
-		self.icon_url = author.get("icon_url",None)
-		self.proxy_icon_url = author.get("proxy_icon_url",None)
+		self.name = author.get("name")
+		self.url = author.get("url")
+		self.icon_url = author.get("icon_url")
+		self.proxy_icon_url = author.get("proxy_icon_url")
 
 class Invite:
 
 	def __init__(self, invite, bot):
-		self.code = invite["code"]
+		self.code = invite.get("code")
 		self.url = f"https://discord.gg/{self.code}"
 		self.guild = None
 		if "guild" in invite:
@@ -459,14 +453,14 @@ class Invite:
 		self.target_user = None
 		if "target_user" in invite:
 			self.channel = User(invite["target_user"], bot)
-		self.target_user_type = invite.get("target_user_type",None)
-		self.approximate_presence_count = invite.get("approximate_presence_count",None)
-		self.approximate_member_count = invite.get("approximate_member_count",None)
-		self.max_age = invite.get("max_age",None)
-		self.max_uses = invite.get("max_uses",None)
-		self.temporary = invite.get("temporary",None)
-		self.uses = invite.get("uses",None)
-		self.created_at = invite.get("created_at",None)
+		self.target_user_type = invite.get("target_user_type")
+		self.approximate_presence_count = invite.get("approximate_presence_count")
+		self.approximate_member_count = invite.get("approximate_member_count")
+		self.max_age = invite.get("max_age")
+		self.max_uses = invite.get("max_uses")
+		self.temporary = invite.get("temporary")
+		self.uses = invite.get("uses")
+		self.created_at = invite.get("created_at")
 		self.__bot = bot
 
 	def __repr__(self):
@@ -478,7 +472,7 @@ class Invite:
 class Ban:
 
 	def __init__(self,ban,bot):
-		self.reason = ban.get("reason",None)
+		self.reason = ban.get("reason")
 		self.user = User(ban["user"])
 		self.__bot = bot
 
@@ -488,10 +482,10 @@ class Ban:
 class Overwrite:
 
 	def __init__(self,overwrite,bot,channel_id):
-		self.id = overwrite["id"]
-		self.type = overwrite["type"]
-		self.allow = overwrite["allow"]
-		self.deny = overwrite["deny"]
+		self.id = overwrite.get("id")
+		self.type = overwrite.get("type")
+		self.allow = overwrite.get("allow")
+		self.deny = overwrite.get("deny")
 		self.channel_id = channel_id
 		self.__bot = bot
 
