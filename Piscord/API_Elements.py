@@ -135,7 +135,7 @@ class Guild:
 
 class Channel:
 
-	def __init__(self, channel, bot):
+	def __init__(self, channel, bot, guild = None):
 		self.id = channel.get("id")
 		self.type = channel.get("type")
 		self.guild_id = channel.get("guild_id")
@@ -156,6 +156,11 @@ class Channel:
 		self.last_pin_timestamp = channel.get("last_pin_timestamp")
 		self.invites = channel.get("invites",[])
 		self.__bot = bot
+
+		if guild:
+			self.guild = guild
+		else:
+			self.guild = bot.get_element(bot.guilds,self.guild_id)
 
 	def __repr__(self):
 		if self.name: return self.name
@@ -196,7 +201,7 @@ class Message:
 		self.edited_timestamp = message.get("edited_timestamp")
 		self.tts = message.get("tts")
 		self.mention_everyone = message.get("mention_everyone")
-		self.mentions = [User(mention,bot) for mention in message.get("mentions")]
+		self.mentions = [User(mention,bot) for mention in message.get("mentions",[])]
 		self.mentions_roles = message.get("mention_roles")
 		self.mention_channels = [Channel(channel,bot) for channel in message.get("mention_channels",[])]
 		self.attachments = [Attachment(attachment) for attachment in message.get("attachments",[])]
@@ -291,6 +296,8 @@ class Member(User):
 		self.joined_at = member.get("joined_at")
 		self.__bot = bot
 
+		self.guild = bot.get_element(bot.guilds,self.guild_id)
+
 	def edit(self, **modifs):
 		if hasattr(self,"id"):
 			user_id=self.id
@@ -351,6 +358,8 @@ class Role:
 		self.guild_id = role.get("guild_id")
 		self.__bot = bot
 
+		self.guild = bot.get_element(bot.guilds,self.guild_id)
+
 	def __repr__(self):
 		return self.name
 
@@ -381,7 +390,7 @@ class Allowed_Mentions:
 
 class Embed(API_Element):
 
-	def __init__(self,embed):
+	def __init__(self,embed={}):
 		self.title = embed.get("title")
 		self.type = embed.get("type")
 		self.description = embed.get("description")

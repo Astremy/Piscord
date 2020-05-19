@@ -21,6 +21,7 @@ Used Modules :
 - json
 - aiohttp
 - threading
+- websockets
 
 Author : Astremy
 
