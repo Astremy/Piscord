@@ -232,16 +232,19 @@ class Message:
 	def edit(self,**modifs):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}","PATCH",json=modifs)
 
-	def add_reaction(self, reaction):
+	def add_reaction(self, emoji):
+		reaction = emoji.get_reaction()
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","PUT")
 
 	def delete_reactions(self):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE")
 
-	def delete_self_reaction(self, reaction):
+	def delete_self_reaction(self, emoji):
+		reaction = emoji.get_reaction()
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE")
 
-	def delete_reaction(self,reaction,user_id=None):
+	def delete_reaction(self,emoji,user_id=None):
+		reaction = emoji.get_reaction()
 		if user_id:
 			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE")
 		else:
@@ -343,6 +346,10 @@ class Emoji:
 		self.animated = emoji.get("animated")
 		self.available = emoji.get("available")
 
+	def get_reaction(self):
+		if self.id:
+			return f"{self.name}:{self.id}"
+		return self.name
 
 class Role:
 

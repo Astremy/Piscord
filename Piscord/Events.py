@@ -169,7 +169,7 @@ class Events:
 
 		@self.def_event("GUILD_MEMBER_UPDATE","member_update")
 		class Event(Member):
-			
+
 			def __init__(self, bot, data):
 				Member.__init__(self,data,bot)
 
@@ -300,7 +300,7 @@ class Events:
 
 				self.guild = bot.get_element(bot.guilds, self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guilds.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, self.channel_id)
 				else:
 					self.channel = bot.get_element(self.private_channels, self.channel_id)
 
