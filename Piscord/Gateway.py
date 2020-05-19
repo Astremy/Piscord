@@ -32,7 +32,8 @@ class Gateway:
 						await self.ws.close()
 						self.ws = await websockets.connect(self.url)
 						await self.send(payload)
-						data = await self.ws.recv()
+						msg = await self.ws.recv()
+						data = json.loads(msg)
 						self.interval = data["d"]["heartbeat_interval"]
 						continue
 				return
