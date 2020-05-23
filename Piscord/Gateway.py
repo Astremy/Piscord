@@ -14,13 +14,13 @@ class Gateway:
 
 	async def connect(self, action = None):
 		self.loop = asyncio.get_event_loop()
-		ws = await websockets.connect(self.url)
+		ws = await websockets.connect(self.url, ping_interval = None)
 		self.ws = ws
 		while True:
 			try:
 				msg = await self.ws.recv()
-			except websockets.exceptions.ConnectionClosedOK as e:
-				if e.code == 1001:
+			except Exception as e:
+				if e.code in [1000, 1001, 1006]:
 					if self.session_id and self.last_sequence:
 						payload = {
 							"op": 6,
@@ -36,6 +36,7 @@ class Gateway:
 						data = json.loads(msg)
 						self.interval = data["d"]["heartbeat_interval"]
 						continue
+				await self.ws.close()
 				return
 			data = json.loads(msg)
 			x = data.get("s")
