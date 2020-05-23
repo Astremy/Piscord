@@ -72,7 +72,7 @@ class Events:
 
 				self.guild = bot.get_element(bot.guilds, self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guilds.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, self.channel_id)
 				else:
 					self.channel = bot.get_element(self.private_channels, self.channel_id)
 
@@ -125,7 +125,7 @@ class Events:
 
 				self.guild = bot.get_element(bot.guilds, self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guilds.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, self.channel_id)
 				else:
 					self.channel = bot.get_element(self.private_channels, self.channel_id)
 
@@ -302,7 +302,7 @@ class Events:
 				if self.guild:
 					self.channel = bot.get_element(self.guild.channels, self.channel_id)
 				else:
-					self.channel = bot.get_element(self.private_channels, self.channel_id)
+					self.channel = bot.get_element(bot.private_channels, self.channel_id)
 
 '''
 		@self.def_event("VOICE_STATE_UPDATE","")

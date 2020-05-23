@@ -1,13 +1,13 @@
 class Cache:
 	def __init__(self, func):
 		self.func = func
-		self.result = None
+		self.results = {}
 
 	def __call__(self,ref):
-		if self.result:
-			return self.result
+		if ref in self.results:
+			return self.results[ref]
 		result = self.func(ref)
-		self.result = result
+		self.results[ref] = result
 		return result
 
 class API_Element:
@@ -39,6 +39,9 @@ class Bot_Element:
 		self.private_channels = bot_element.get("private_channels",[])
 		self.presences = bot_element.get("presences",[])
 		self.voices = {}
+
+	def __str__(self):
+		return self.user.name
 
 class Guild:
 
@@ -232,19 +235,20 @@ class Message:
 	def edit(self,**modifs):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}","PATCH",json=modifs)
 
-	def add_reaction(self, emoji):
-		reaction = emoji.get_reaction()
+	def add_reaction(self, reaction):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","PUT")
 
 	def delete_reactions(self):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions","DELETE")
 
-	def delete_self_reaction(self, emoji):
-		reaction = emoji.get_reaction()
+	def delete_self_reaction(self, reaction):
 		self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/@me","DELETE")
 
-	def delete_reaction(self,emoji,user_id=None):
-		reaction = emoji.get_reaction()
+	def delete_reaction(self,reaction,user_id=None):
+		if isinstance(emoji, Emoji):
+			reaction = emoji.get_reaction()
+		else:
+			reaction = emoji
 		if user_id:
 			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE")
 		else:
@@ -346,10 +350,10 @@ class Emoji:
 		self.animated = emoji.get("animated")
 		self.available = emoji.get("available")
 
-	def get_reaction(self):
-		if self.id:
-			return f"{self.name}:{self.id}"
-		return self.name
+		self.react = f"{self.name}:{self.id}" if self.id else self.name
+
+	def __str__(self):
+		return f"<:{self.name}:{self.id}>"
 
 class Role:
 
