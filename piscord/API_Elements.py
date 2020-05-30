@@ -81,7 +81,7 @@ class Guild:
 		self.member_count = guild.get("member_count")
 		self.voice_states = guild.get("voice_states")
 		self.members = [Member(member,bot) for member in guild.get("members",[])]
-		self.channels = [Channel(channel,bot) for channel in guild.get("channels",[])]
+		self.channels = [Channel(channel,bot,guild=self) for channel in guild.get("channels",[])]
 		self.presences = guild.get("presences",[]) # To Do
 		self.max_presences = guild.get("max_presences")
 		self.max_members = guild.get("max_members")

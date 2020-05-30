@@ -13,6 +13,9 @@ Thus, in all the examples, Piscord is used with [SAPAS](https://github.com/Astre
 ### Documentation
 [Piscord Documentation](https://piscord.astremy.com/) (Only in French for the moment)
 
+### Tutorial
+[Piscord Documentation](https://github.com/Astremy/Piscord_Tutorial) (Only in French for the moment)
+
 #### How to use it
 You can install it with pip : pip install Piscord
 

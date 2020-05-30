@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="piscord",
-    version="1.3.2",
+    version="1.4.0",
     author="Astremy",
     description="Piscord is a python framework to communicate with the Discord api.",
     long_description=long_description,

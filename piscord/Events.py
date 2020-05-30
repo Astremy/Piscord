@@ -7,7 +7,6 @@ class Events:
 		class Event(Bot_Element):
 
 			def __init__(self, bot, data):
-				#print(data)
 				Bot_Element.__init__(self,data,bot)
 				self.version = data["v"]
 
@@ -22,10 +21,8 @@ class Events:
 
 				guild = bot.get_element(bot.guilds,self.id)
 				if guild:
-					for x,y in self.__dict__.items():
-						setattr(guild,x,y)
-				else:
-					bot.guilds.append(self)
+					bot.guilds.remove(guild)
+				bot.guilds.append(self)
 
 		@self.def_event("GUILD_UPDATE","guild_update")
 		class Event(Guild):
