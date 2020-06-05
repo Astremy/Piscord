@@ -1,5 +1,4 @@
 {
 	"/guilds/715273516555174009/channels POST":{"id": "715364724769816656", "last_message_id": null, "type": 0, "name": "test", "position": 1, "parent_id": null, "topic": null, "guild_id": "715273516555174009", "permission_overwrites": [], "nsfw": false, "rate_limit_per_user": 0},
 	"/guilds/715273516555174009/roles POST":{"id": "715370573575749724", "name": "neko", "permissions": 104320577, "position": 1, "color": 0, "hoist": false, "managed": false, "mentionable": false}
-
 }

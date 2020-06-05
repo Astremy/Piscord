@@ -80,11 +80,11 @@ def test_message_send(bot_message):
 
 	assert message.id == "715958368191381604"
 	assert message.author.id == "263331548542009348"
-	assert message.channel == bot.get_element(bot.guilds[0].channels,"715273516555174012")
+	assert message.channel == bot.get_element(bot.guilds[0].channels,id="715273516555174012")
 	assert message.guild == bot.guilds[0]
 	assert message.mentions
 	assert message.mentions[0].id == bot.user.id
-	assert bot.get_element(message.guild.members,bot.user.id)
+	assert bot.get_element(message.guild.members,id=bot.user.id)
 
 def test_channel_attribs(bot_guilds):
 	bot = bot_guilds

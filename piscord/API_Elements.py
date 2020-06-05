@@ -131,6 +131,10 @@ class Guild:
 	def get_ban(self, user_id):
 		return Ban(self.__bot.api(f"/guilds/{self.id}/bans/{user_id}"),self.__bot)
 
+	def get_webhooks(self):
+		webhooks = self.__bot.api(f"/guilds/{self.id}/webhooks")
+		return [Webhook(webhook,self.__bot) for webhook in webhooks]
+
 	def create_channel(self,**kwargs):
 		''' kwargs : https://discord.com/developers/docs/resources/guild#create-guild-channel '''
 		return Channel(self.__bot.api(f"/guilds/{self.id}/channels", "POST", json=kwargs),self.__bot)
@@ -166,7 +170,7 @@ class Channel:
 		if guild:
 			self.guild = guild
 		else:
-			self.guild = bot.get_element(bot.guilds,self.guild_id)
+			self.guild = bot.get_element(bot.guilds,id=self.guild_id)
 
 	def __repr__(self):
 		if self.name: return self.name
@@ -181,8 +185,14 @@ class Channel:
 			form.add_field('payload_json', json.dumps({"content":content,**kwargs}))
 			for i in range(len(files)):
 				file = files[i]
-				with open(file,"rb") as f:
-					c = f.read()
+				if type(file) == str:
+					with open(file,"rb") as f:
+						c = f.read()
+				elif type(file) == list:
+					c = file[0]
+					file = file[1]
+				else:
+					raise TypeError("File should be a list or a string")
 				form.add_field(f"file {i}", c, filename=file)
 			return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", data=form),self.__bot)
 		return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", json={"content":content,**kwargs}),self.__bot)
@@ -195,8 +205,15 @@ class Channel:
 		invites = self.__bot.api(f"/channels/{self.id}/invites")
 		return [Invite(invite,self.__bot) for invite in invites]
 
+	def get_webhooks(self):
+		webhooks = self.__bot.api(f"/channels/{self.id}/webhooks")
+		return [Webhook(webhook,self.__bot) for webhook in webhooks]
+
 	def create_invite(self,**kwargs):
 		return Invite(self.__bot.api(f"/channels/{self.id}/invites","POST",json=kwargs),self.__bot)
+
+	def create_webhook(self,name,avatar=None):
+		return Webhook(self.__bot.api(f"/channels/{self.id}/webhooks","POST",json={"name":name,"avatar":avatar}),self.__bot,channel=self)
 
 	def typing(self):
 		self.__bot.api(f"/channels/{self.id}/typing","POST")
@@ -232,11 +249,11 @@ class Message:
 		self.flags = message.get("flags")
 		self.__bot = bot
 
-		self.guild = bot.get_element(bot.guilds, self.guild_id)
+		self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 		if self.guild:
-			self.channel = bot.get_element(self.guild.channels, self.channel_id)
+			self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 		else:
-			self.channel = bot.get_element(bot.private_channels, self.channel_id)
+			self.channel = bot.get_element(bot.private_channels, id=self.channel_id)
 
 	def __repr__(self):
 		return self.content
@@ -315,7 +332,7 @@ class Member(User):
 		self.joined_at = member.get("joined_at")
 		self.__bot = bot
 
-		self.guild = bot.get_element(bot.guilds,self.guild_id)
+		self.guild = bot.get_element(bot.guilds,id=self.guild_id)
 
 	def edit(self, **modifs):
 		if hasattr(self,"id"):
@@ -381,7 +398,7 @@ class Role:
 		self.guild_id = role.get("guild_id")
 		self.__bot = bot
 
-		self.guild = bot.get_element(bot.guilds,self.guild_id)
+		self.guild = bot.get_element(bot.guilds,id=self.guild_id)
 
 	def __repr__(self):
 		return self.name
@@ -526,3 +543,49 @@ class Overwrite(API_Element):
 
 	def delete(self):
 		self.__bot.api(f"/channels/{self.channel_id}/permissions/{self.id}","DELETE")
+
+class Webhook:
+
+	def __init__(self, webhook, bot, channel=None):
+		self.id = webhook.get("id")
+		self.type = webhook.get("type")
+		self.guild_id = webhook.get("guild_id")
+		self.channel_id = webhook.get("channel_id")
+		self.user = webhook.get("user")
+		self.name = webhook.get("name")
+		self.avatar = webhook.get("avatar")
+		self.token = webhook.get("token")
+		self.__bot = bot
+
+		if channel:
+			self.channel = channel
+			self.guild = channel.guild
+		else:
+			if self.guild_id:
+				self.guild = bot.get_element(bot.guilds,id=self.guild_id)
+				if self.channel_id:
+					self.channel = bot.get_element(self.guild.channels,id=self.channel_id)
+
+	def send(self,content=None,files=None,**kwargs):
+		if files:
+			form = aiohttp.FormData()
+			form.add_field('payload_json', json.dumps({"content":content,**kwargs}))
+			for i in range(len(files)):
+				file = files[i]
+				if type(file) == str:
+					with open(file,"rb") as f:
+						c = f.read()
+				elif type(file) == list:
+					c = file[0]
+					file = file[1]
+				else:
+					raise TypeError("File should be a list or a string")
+				form.add_field(f"file {i}", c, filename=file)
+			return self.__bot.api(f"/webhooks/{self.id}/{self.token}", "POST", data=form)
+		return self.__bot.api(f"/webhooks/{self.id}/{self.token}", "POST", json={"content":content,**kwargs})
+
+	def delete(self):
+		self.__bot.api(f"/webhooks/{self.id}","DELETE")
+
+	def edit(self,**modifs):
+		self.__bot.api(f"/webhooks/{self.id}","PATCH",json=modifs)
