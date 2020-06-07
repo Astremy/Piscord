@@ -1,0 +1,19 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0  # Use the ref you want to point at
+    hooks:
+    -   id: check-ast
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: end-of-file-fixer
+    -   id: no-commit-to-branch
+        args: [--branch, master]
+    -   id: pretty-format-json
+        args: [--no-sort-keys, --autofix]
+    -   id: requirements-txt-fixer
+    -   id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+-   repo: https://github.com/asottile/add-trailing-comma
+    rev: v2.0.1
+    hooks:
+    -   id: add-trailing-comma
