@@ -338,5 +338,3 @@ class Events:
 					if self.voice.state == 2:
 						await self.voice.run()
 '''
-
-		

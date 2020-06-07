@@ -68,11 +68,12 @@ class Gateway:
 						"token": self.token,
 						"properties": {
 							"$browser": "piscord",
-							"$device": "piscord"
+							"$device": "piscord",
 						},
 					"large_threshold": 250,
-					"presence":self.presence
-				}}
+					"presence":self.presence,
+     },
+    }
 				await self.send(payload)
 			if data["op"] == self.events_code:
 				if data["t"] == "READY":
@@ -85,8 +86,9 @@ class Gateway:
 			"d": {
 				"token": self.token,
 				"session_id": self.session_id,
-				"seq": self.last_sequence
-		}}
+				"seq": self.last_sequence,
+   },
+  }
 		ws = await websockets.connect(self.url, ping_interval = None)
 		await ws.recv()
 		await self.send(payload)

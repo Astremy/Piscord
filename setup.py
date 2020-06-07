@@ -22,5 +22,5 @@ setuptools.setup(
     install_requires=[
        "aiohttp",
        "websockets",
-   ],
+    ],
 )

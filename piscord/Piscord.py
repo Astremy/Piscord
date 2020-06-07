@@ -90,7 +90,7 @@ class Bot(Thread,Utility,Events):
 	async def api_call(self, path, method="GET", **kwargs):
 		headers = {
 			"Authorization": f"Bot {self.token}",
-			"User-Agent": "Bot"
+			"User-Agent": "Bot",
 		}
 		async with aiohttp.ClientSession() as session:
 			async with session.request(method, self.api_url+path,headers = headers,**kwargs) as response:
@@ -144,7 +144,7 @@ class Bot(Thread,Utility,Events):
 		self.presence["game"] = {
 			"name":presence,
 			"type":type,
-			"url":url
+			"url":url,
 		}
 		if self.gateway:
 			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)

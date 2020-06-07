@@ -3,12 +3,14 @@ from .imports import Bot
 from unittest.mock import Mock,patch
 import pytest
 import json
+import pathlib
 
-with open("calls.json","r") as f:
-	calls = json.load(f)
 
-with open("responses.json","r") as f:
-	responses = json.load(f)
+root = pathlib.Path(__file__).resolve().parent
+with root.joinpath("calls.json").open() as f1, \
+     root.joinpath("responses.json").open() as f2:
+	calls = json.load(f1)
+	responses = json.load(f2)
 
 async def api_call(path, method="GET", **kwargs):
 	return responses[f"{path} {method}"]
@@ -90,7 +92,7 @@ def test_channel_attribs(bot_guilds):
 	bot = bot_guilds
 	guild = bot.guilds[0]
 	channel = guild.channels[0]
-	
+
 	assert channel.name == "Salons textuels"
 	assert channel.type == 4
 	assert channel.id == "715273516555174010"

@@ -20,14 +20,14 @@ class OAuth:
 			"grant_type": "authorization_code",
 			"code": code,
 			"redirect_uri": self.redirect_uri,
-			"scope": self.scope
+			"scope": self.scope,
 		}
 
 		return self.bot.api("/oauth2/token","POST",data=data)
 
 	def __request_token(self,token,url):
 		headers = {
-			"Authorization": f"Bearer {json.loads(token)['access_token']}"
+			"Authorization": f"Bearer {json.loads(token)['access_token']}",
 		}
 
 		return self.bot.api(url,"GET",headers=headers)

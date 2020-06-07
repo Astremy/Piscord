@@ -28,8 +28,9 @@ class Voice:
 							"guild_id": self.guild_id,
 							"channel_id": self.channel_id,
 							"mute": self.mute,
-							"deaf": self.deaf
-					}})
+							"deaf": self.deaf,
+      },
+     })
 				'''
 				if data["t"] == "VOICE_SERVER_UPDATE":
 					if data["d"]["guild_id"] == self.guild_id:
@@ -59,7 +60,7 @@ class Voice_Client:
 		self.token = None
 		self.endpoint = None
 		self.gateway = None
-	
+
 	async def run(self):
 		print("aaa")
 		gateway = Gateway(f"wss://{self.endpoint[:-3]}/?v=4", "", 8, False)
