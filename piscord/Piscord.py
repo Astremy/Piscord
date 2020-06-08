@@ -144,7 +144,7 @@ class Bot(Thread,Utility,Events):
 		self.presence["d"]["game"] = {
 			"name":presence,
 			"type":type,
-			#"url":url
+			"url":url
 		}
 		if self.gateway:
 			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
