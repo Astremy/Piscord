@@ -28,9 +28,7 @@ class Gateway:
 			except Exception as e:
 				if e.code in [1000, 1001, 1006]:
 					await self.ws.close()
-					print("reconnect")
 					if self.session_id and self.last_sequence:
-						print("debug")
 						await self.ws.close()
 						for i in range(5):
 							try:

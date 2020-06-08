@@ -141,16 +141,16 @@ class Bot(Thread,Utility,Events):
 				self.in_wait_voices = []
 
 	def set_presence(self, presence,type=0,url=None):
-		self.presence["game"] = {
+		self.presence["d"]["game"] = {
 			"name":presence,
 			"type":type,
-			"url":url
+			#"url":url
 		}
 		if self.gateway:
 			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
 
 	def set_status(self, status):
-		self.presence["status"]=status
+		self.presence["d"]["status"]=status
 		if self.gateway:
 			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
 

@@ -279,7 +279,6 @@ class Events:
 		class Event:
 
 			def __init__(self, bot, data):
-				print(data)
 				self.guild_id = data["guild_id"]
 				self.channel_id = data["channel_id"]
 
