@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 from threading import Thread
+import json
 
 from .Events import Events
 from .Errors import *
@@ -34,7 +35,7 @@ class Utility:
 	def get_webhook(self, webhook_id):
 		return Webhook(self.api(f"/webhooks/{webhook_id}"), self)
 
-class Bot(Thread,Utility,Events):
+class Bot(Thread,Utility,Events,Bot_Element):
 
 	def __init__(self,token,api_sleep=0.05):
 		self.events_list = {}
@@ -88,10 +89,16 @@ class Bot(Thread,Utility,Events):
 		except:...
 
 	async def api_call(self, path, method="GET", **kwargs):
-		headers = {
-			"Authorization": f"Bot {self.token}",
-			"User-Agent": "Bot"
-		}
+
+		if "headers" in kwargs:
+			headers = kwargs["headers"]
+			del kwargs["headers"]
+		else:
+			headers = {
+				"Authorization": f"Bot {self.token}",
+				"User-Agent": "Bot"
+			}
+
 		async with aiohttp.ClientSession() as session:
 			async with session.request(method, self.api_url+path,headers = headers,**kwargs) as response:
 				try:

@@ -89,7 +89,7 @@ class Events:
 			@property
 			@Cache
 			def message(self):
-				return Message(self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),self.__bot)
+				return Message({**self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),"guild_id":self.guild_id},self.__bot)
 
 			def delete(self):
 				if self.id == self.__bot.user.id:
@@ -111,7 +111,7 @@ class Events:
 			@property
 			@Cache
 			def message(self):
-				return Message(self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),self.__bot)
+				return Message({**self.__bot.api(f"/channels/{self.channel_id}/messages/{self.message_id}"),"guild_id":self.guild_id},self.__bot)
 
 		@self.def_event("CHANNEL_PINS_UPDATE","pin_update")
 		class Event:

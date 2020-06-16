@@ -64,6 +64,26 @@ class Bot_Element:
 	def __str__(self):
 		return self.user.name
 
+	def edit(self,**modifs):
+
+		"""
+		Modify bot user, with parameters.
+		Parameters : https://discord.com/developers/docs/resources/user#modify-current-user
+		"""
+
+		self.api(f"/users/@me","PATCH",json=modifs)
+
+	def create_guild(self,**kwargs):
+
+		"""
+		Create a guild channel, with parameters.
+		Parameters : https://discord.com/developers/docs/resources/guild#create-guild
+
+		Return :class:`Guild`
+		"""
+
+		return Guild(self.api(f"/guilds", "POST", json=kwargs),self)
+
 class Guild:
 
 	"""
@@ -240,6 +260,23 @@ class Guild:
 		else:
 			return "Guild"
 
+	def edit(self,**modifs):
+
+		"""
+		Modify guild, with parameters.
+		Parameters : https://discord.com/developers/docs/resources/guild#modify-guild
+		"""
+
+		self.__bot.api(f"/guilds/{self.id}","PATCH",json=modifs)
+
+	def delete(self):
+
+		"""
+		Delete permanently the guild. The bot must be the owner
+		"""
+
+		self.__bot.api(f"/guilds/{self.id}","DELETE")
+
 	def get_channels(self):
 
 		"""
@@ -331,6 +368,32 @@ class Guild:
 		"""
 
 		return Role({**self.__bot.api(f"/guilds/{self.id}/roles", "POST", json=kwargs),"guild_id":self.id},self.__bot)
+
+	def count_prune(self, days=7, include_roles=[]):
+		
+		"""
+		Count the number of users will be pruned if you start a prune
+
+		days:
+			The number of days the user need to be inactive to be counted
+		include_roles:
+			The roles to be considered to prune (by default, a user with a role can't be pruned)
+		"""
+
+		self.__bot.api(f"/guilds/{self.id}/prune", "GET", params={"days":days,"include_roles":include_roles})
+
+	def prune(self, days=7, include_roles=[]):
+
+		"""
+		Prune inactive members (kick)
+
+		days:
+			The number of days the user need to be inactive to be counted
+		include_roles:
+			The roles to be considered to prune (by default, a user with a role can't be pruned)
+		"""
+
+		self.__bot.api(f"/guilds/{self.id}/prune", "POST", params={"days":days,"include_roles":include_roles})
 
 class Channel:
 
@@ -472,8 +535,13 @@ class Channel:
 
 		Return List of :class:`Message`
 		"""
+		params = {"limit":limit}
+		if before:
+			params["before"] = before
+		if after:
+			params["after"] = after
 
-		messages = self.__bot.api(f"/channels/{self.id}/messages","GET",params={"limit":limit,"before":before,"after":after})
+		messages = self.__bot.api(f"/channels/{self.id}/messages","GET",params=params)
 		return [Message(message,self.__bot) for message in messages]
 
 	def get_message(self,message_id):
@@ -533,6 +601,43 @@ class Channel:
 		"""
 
 		return Webhook(self.__bot.api(f"/channels/{self.id}/webhooks","POST",json={"name":name,"avatar":avatar}),self.__bot,channel=self)
+
+	def bulk_delete(self,messages_ids):
+
+		"""
+		Delete multiple messages
+
+		messages_ids:
+			The ids of the message to delete
+
+			Max : 100
+		"""
+
+		if len(messages_ids) > 100:
+			raise ValueError("Max number exceeded")
+
+		self.__bot.api(f"POST/channels/{self.id}/messages/bulk-delete","POST",json=messages_ids)
+
+	def purge(self, max, before = None, after = None):
+
+		"""
+		Delete messages from a channels
+
+		max:
+			The number of messages to delete
+
+			Max : 100
+		before:
+			The messages before a message id
+		after:
+			The messages after a message id
+		"""
+
+		if max > 100:
+			raise ValueError("Max number exceeded")
+
+		messages = [message.id in message in self.get_messages(limit=max,before=before,after=after)]
+		self.bulk_delete(messages)
 
 	def typing(self):
 
@@ -705,10 +810,9 @@ class Message:
 		else, delete all the reactions corresponding to the reaction in argument
 		"""
 
-		if isinstance(emoji, Emoji):
-			reaction = emoji.get_reaction()
-		else:
-			reaction = emoji
+		if isinstance(reaction, Emoji):
+			reaction = reaction.react
+
 		if user_id:
 			self.__bot.api(f"/channels/{self.channel_id}/messages/{self.id}/reactions/{reaction}/{user_id}","DELETE")
 		else:
@@ -944,7 +1048,9 @@ class Emoji(API_Element):
 		self.react = f"{self.name}:{self.id}" if self.id else self.name
 
 	def __str__(self):
-		return f"<:{self.name}:{self.id}>"
+		if self.id:
+			return f"<:{self.name}:{self.id}>"
+		return self.name
 
 class Role:
 
