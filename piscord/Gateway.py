@@ -17,9 +17,9 @@ class Gateway:
 		self.presence = presence
 		self.error = None
 
-	async def connect(self, action = None):
+	async def connect(self, action = None, shards = [0,1]):
 		self.loop = asyncio.get_event_loop()
-		ws = await websockets.connect(self.url, ping_interval = None)
+		ws = await websockets.connect(self.url, ping_interval = None, max_size=1_000_000_000)
 		self.ws = ws
 		while True:
 			if self.error:
@@ -53,6 +53,7 @@ class Gateway:
 					self.error = ConnexionError(f"Unknow Error - {e.code}")
 				self.heartbeat.cancel()
 				continue
+			
 			data = json.loads(msg)
 			x = data.get("s")
 			if x:
@@ -69,8 +70,11 @@ class Gateway:
 							"$device": "piscord"
 						},
 					"large_threshold": 250,
-					"presence":self.presence
+					"presence":self.presence,
 				}}
+				if shards[1] > 1:
+					payload["shard"] = shards
+
 				if action:
 					await self.send(action)
 				else:
@@ -94,7 +98,7 @@ class Gateway:
 			await ws.recv()
 			await self.send(payload)
 			msg = await ws.recv()
-		except:
+		except Exception as e:
 			await ws.close()
 		return ws, msg
 

@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 from threading import Thread
-import json
 
 from .Events import Events
 from .Errors import *
@@ -35,13 +34,12 @@ class Utility:
 	def get_webhook(self, webhook_id):
 		return Webhook(self.api(f"/webhooks/{webhook_id}"), self)
 
-class Bot(Thread,Utility,Events,Bot_Element):
+class Bot(Thread,Utility,Bot_Element):
 
-	def __init__(self,token,api_sleep=0.05):
+	def __init__(self,token,api_sleep=0.05,shards=[0,1]):
 		self.events_list = {}
 		Events.__init__(self)
 		Thread.__init__(self)
-		Utility.__init__(self)
 		Bot_Element.__init__(self,{},self)
 		self.token=token
 		self.api_sleep = api_sleep
@@ -50,8 +48,10 @@ class Bot(Thread,Utility,Events,Bot_Element):
 		self.in_wait_voices = []
 		self.presence = {"op": 3,"d": {"game":None,"status":None,"afk":False,"since":0}}
 		self.gateway = None
+		self.shards = shards
 
 	def def_event(self,event,name):
+
 		def add_event(function):
 			self.events_list[event] = [name,function]
 			return
@@ -131,7 +131,7 @@ class Bot(Thread,Utility,Events,Bot_Element):
 		events = self.events_list
 		gateway = Gateway(f"{url}?v=7&encoding=json", self.token, presence=self.presence)
 		self.gateway = gateway
-		async for data in gateway.connect():
+		async for data in gateway.connect(shards = self.shards):
 			if data["op"] == 0:
 				if data["t"] in events:
 					event = events[data["t"]]

@@ -1,4 +1,7 @@
 import asyncio
+import socket
+import subprocess
+from random import randint
 
 from .Gateway import *
 
@@ -34,7 +37,7 @@ class Voice:
 				if data["t"] == "VOICE_SERVER_UPDATE":
 					if data["d"]["guild_id"] == self.guild_id:
 						self.client.token = data["d"]["token"]
-						self.client.endpoint = data["d"]["endpoint"]
+						self.client.endpoint = data["d"]["endpoint"][:-3]
 				elif data["t"] == "VOICE_STATE_UPDATE":
 					if data["d"]["user_id"] == self.__bot.user.id and data["d"]["guild_id"] == self.guild_id:
 						self.client.session_id = data["d"]["session_id"]
@@ -42,13 +45,17 @@ class Voice:
 					self.state = 1
 					asyncio.create_task(self.client.run())
 				
-
 	def stop(self):
 		if self.client.gateway:
 			self.client.stop()
 		if self.gateway:
 			self.gateway.stop()
 
+	def play(self, name):
+		ip = socket.gethostbyname(self.client.endpoint)
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		sending = AudioStream()
+		self.socket.sendto(sending.encode_packet(name), (ip, self.client.port))
 
 class Voice_Client:
 
@@ -63,7 +70,7 @@ class Voice_Client:
 		self.mode = None
 	
 	async def run(self):
-		gateway = Gateway(f"wss://{self.endpoint[:-3]}/?v=4", "", auth_op = 8, events_code = -1, heartbeat_code = 3)
+		gateway = Gateway(f"wss://{self.endpoint}/?v=4", "", auth_op = 8, events_code = -1, heartbeat_code = 3)
 		self.gateway = gateway
 		payload = {
 			"op": 0,
@@ -114,16 +121,28 @@ class AudioStream:
 		packet = bytearray()
 		packet.append(0x80)
 		packet.append(0x78)
-		packet.append(self.sequence)
-		packet.append(self.timestamp)
-		packet.append(self.ssrc)
-		packet.append(self.encode_voice_data(audio))
-		return bytes(packet)
+		self.packet_add(packet, self.sequence, 2)
+		self.packet_add(packet, self.timestamp, 4)
+		self.packet_add(packet, self.ssrc, 4)
+
+		return bytes(packet) + self.encode_voice_data(audio)[:-10000]
+
+	def packet_add(self, packet, value, bytes):
+		for i in range(bytes,0,-1):
+			x = 256**(i-1)
+			v = value//x
+			if v > 255:
+				raise ValueError("Too large number")
+			value = value%x
+			packet.append(v)
 
 	def encode_voice_data(self, audio: str):
 		"""
 		Todo: implement Opus audio encryption and increment timestamp accordingly 
 		"""
-		out, err = ffmpeg.input(audio).output('pipe:', f='opus').run(capture_stdout=True, capture_stderr=True)
-		print(err)
-		return out
+		try:
+			output = subprocess.Popen(f"ffmpeg -i {audio} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1",stdout=subprocess.PIPE).stdout
+		except FileNotFoundError as e:
+			print(e)
+			raise ProcessLookupError("You should install ffmpeg to use voices")
+		return output.read()
