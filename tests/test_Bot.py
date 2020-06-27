@@ -1,4 +1,4 @@
-from .imports import Bot
+from .imports import Bot,Permission
 
 from unittest.mock import Mock,patch
 import pytest
@@ -104,3 +104,46 @@ def test_channel_attribs(bot_guilds):
 	assert channel.id == "715273516555174010"
 	assert channel.guild == guild
 	assert channel.nsfw == None
+
+def test_permissions(bot_guilds):
+	bot = bot_guilds
+	guild = bot.guilds[0]
+	role = guild.roles[0]
+
+	assert role.permissions.real == 104320577
+	assert role.permissions == 1048576
+	assert role.permissions == Permission.CONNECT
+	assert role.permissions == Permission.CHANGE_NICKNAME
+	assert role.permissions != 8
+	assert role.permissions != Permission.VIEW_AUDIT_LOG
+	assert role.permissions != Permission.KICK_MEMBERS
+
+	role.permissions += Permission.PRIORITY_SPEAKER
+	assert role.permissions.real == 104320833
+	assert role.permissions == Permission.PRIORITY_SPEAKER
+
+	perm = Permission.KICK_MEMBERS + Permission.ADMINISTRATOR
+
+	assert perm.real == 10
+	assert perm == Permission.KICK_MEMBERS
+	assert perm != Permission.BAN_MEMBERS
+	assert perm == 8
+	
+	assert (perm + Permission.BAN_MEMBERS) == Permission.BAN_MEMBERS
+	perm += Permission.BAN_MEMBERS
+
+	assert perm.real == 14
+	assert perm == Permission.BAN_MEMBERS
+	assert perm != Permission.CREATE_INSTANT_INVITE
+
+	perm_2 = perm - Permission.ADMINISTRATOR
+
+	assert perm_2.real == 6
+	assert perm_2 == Permission.KICK_MEMBERS
+	assert perm_2 != Permission.CREATE_INSTANT_INVITE
+
+	assert (perm_2 - 2).real == 4
+	assert (perm_2 - 5).real == 2
+
+	perm_2 -= Permission.KICK_MEMBERS
+	assert perm_2.real == 4

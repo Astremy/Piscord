@@ -1,7 +1,7 @@
 Piscord Objects
 ---------------
 
-.. automodule:: API_Elements
+.. automodule:: piscord
 
 Bot
 ^^^

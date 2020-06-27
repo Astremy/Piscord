@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as file:
 
 setuptools.setup(
     name="piscord",
-    version="1.4.1",
+    version="1.5.0",
     author="Astremy",
     description="Piscord is a python framework to communicate with the Discord api.",
     long_description=long_description,
