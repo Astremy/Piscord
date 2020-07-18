@@ -42,7 +42,7 @@ class Gateway:
 								await asyncio.sleep(1)
 						else:
 							self.error = ConnexionError("You've lost the connection to the server")
-							self.heartbeat.cancel()
+							self.heartbeat.cance
 						continue
 					else:
 						self.heartbeat.cancel()
@@ -92,11 +92,10 @@ class Gateway:
 				"session_id": self.session_id,
 				"seq": self.last_sequence
 		}}
-		ws = await websockets.connect(self.url, ping_interval = None)
+		ws = await websockets.connect(self.url, ping_interval = None, max_size=1_000_000_000)
 		msg = None
 		try:
-			await ws.recv()
-			await self.send(payload)
+			await ws.send(json.dumps(payload))
 			msg = await ws.recv()
 		except Exception as e:
 			await ws.close()

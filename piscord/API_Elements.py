@@ -1,5 +1,6 @@
 import aiohttp
 import json
+import time
 from .Permission import Perm
 
 class Cache:
@@ -33,6 +34,40 @@ class API_Element:
 				output[x]=y
 		return output
 
+class API_Response:
+
+	def __init__(self,api_sleep):
+
+		def wait():
+			while not self.output:
+				time.sleep(self._api_sleep)
+
+		object.__setattr__(self, "output", None)
+		object.__setattr__(self, "_api_sleep", api_sleep)
+		object.__setattr__(self, "_wait", wait)
+
+	def __getattr__(self, attribute):
+		self._wait()
+
+		out = self.output.__getattribute__(attribute)
+		return out
+
+	def __setattr__(self, attribute):
+		self._wait()
+
+		out = self.output.__setattr__(attribute)
+		return out
+
+	def __delattr__(self, attribute):
+		self._wait()
+
+		out = self.output.__delattr__(attribute)
+		return out
+
+	def __iter__(self):
+		self._wait()
+
+		return self.output.__iter__()
 
 class Bot_Element:
 
@@ -83,7 +118,7 @@ class Bot_Element:
 		Return :class:`Guild`
 		"""
 
-		return Guild(self.api(f"/guilds", "POST", json=kwargs),self)
+		return self.api(f"/guilds", "POST", [Guild,self], json=kwargs)
 
 class Guild:
 
@@ -284,7 +319,7 @@ class Guild:
 		Return a list of :class:`Channel` of the guild (deprecated, use Guild.channels)
 		"""
 
-		channels = self.__bot.api(f"/guilds/{self.id}/channels")
+		channels = self.__bot.api(f"/guilds/{self.id}/channels", "GET")
 		return [Channel(channel,self.__bot) for channel in channels]
 
 	def get_roles(self):
@@ -293,7 +328,7 @@ class Guild:
 		Return a list of :class:`Role` of the guild (deprecated, use Guild.roles)
 		"""
 
-		roles = self.__bot.api(f"/guilds/{self.id}/roles")
+		roles = self.__bot.api(f"/guilds/{self.id}/roles", "GET")
 		return [Role(role,self.__bot) for role in roles]
 
 	def get_invites(self):
@@ -302,7 +337,7 @@ class Guild:
 		Return a list of :class:`Invite` of the guild
 		"""
 
-		invites = self.__bot.api(f"/guilds/{self.id}/invites")
+		invites = self.__bot.api(f"/guilds/{self.id}/invites", "GET")
 		return [Invite(invite,self.__bot) for invite in invites]
 
 	def get_members(self, limit=100, after=0):
@@ -311,7 +346,7 @@ class Guild:
 		Return a list of :class:`Member` of the guild (deprecated, use Guild.members)
 		"""
 
-		members = self.__bot.api(f"/guilds/{self.id}/members","GET",params={"limit":limit,"after":after})
+		members = self.__bot.api(f"/guilds/{self.id}/members","GET", params={"limit":limit,"after":after})
 		return [Member({**member,"guild_id":self.id},self.__bot) for member in members]
 
 	def get_member(self,user_id):
@@ -320,7 +355,8 @@ class Guild:
 		returns a specific :class:`Member` using their id
 		"""
 
-		return Member({**self.__bot.api(f"/guilds/{self.id}/members/{user_id}"),"guild_id":self.id},self.__bot)
+		member = {x:y for x,y in self.__bot.api(f"/guilds/{self.id}/members/{user_id}", "GET").items()}
+		return Member({**member,"guild_id":self.id},self.__bot)
 
 	def get_bans(self):
 
@@ -328,7 +364,7 @@ class Guild:
 		Return a list of :class:`Ban` of the guild
 		"""
 
-		bans = self.__bot.api(f"/guilds/{self.id}/bans")
+		bans = self.__bot.api(f"/guilds/{self.id}/bans", "GET")
 		return [Ban(ban,self.__bot) for ban in bans]
 
 	def get_ban(self, user_id):
@@ -337,7 +373,7 @@ class Guild:
 		returns a specific :class:`Ban` using the id of the banned user
 		"""
 
-		return Ban(self.__bot.api(f"/guilds/{self.id}/bans/{user_id}"),self.__bot)
+		return self.__bot.api(f"/guilds/{self.id}/bans/{user_id}", "GET", [Ban, self.__bot])
 
 	def get_webhooks(self):
 
@@ -345,7 +381,7 @@ class Guild:
 		Return a list of :class:`Webhook` of the guild
 		"""
 
-		webhooks = self.__bot.api(f"/guilds/{self.id}/webhooks")
+		webhooks = self.__bot.api(f"/guilds/{self.id}/webhooks", "GET")
 		return [Webhook(webhook,self.__bot) for webhook in webhooks]
 
 	def create_channel(self,**kwargs):
@@ -357,7 +393,7 @@ class Guild:
 		Return :class:`Channel`
 		"""
 
-		return Channel(self.__bot.api(f"/guilds/{self.id}/channels", "POST", json=kwargs),self.__bot)
+		return self.__bot.api(f"/guilds/{self.id}/channels", "POST", [Channel, self.__bot], json=kwargs)
 
 	def create_role(self,**kwargs):
 
@@ -368,7 +404,8 @@ class Guild:
 		Return :class:`Role`
 		"""
 
-		return Role({**self.__bot.api(f"/guilds/{self.id}/roles", "POST", json=kwargs),"guild_id":self.id},self.__bot)
+		role = {x:y for x,y in self.__bot.api(f"/guilds/{self.id}/roles", "POST", json=kwargs).items()}
+		return Role({**role,"guild_id":self.id},self.__bot)
 
 	def count_prune(self, days=7, include_roles=[]):
 		
@@ -381,7 +418,8 @@ class Guild:
 			The roles to be considered to prune (by default, a user with a role can't be pruned)
 		"""
 
-		self.__bot.api(f"/guilds/{self.id}/prune", "GET", params={"days":days,"include_roles":include_roles})
+		x = self.__bot.api(f"/guilds/{self.id}/prune", "GET", params=[*[("include_roles",role) for role in include_roles], ("days",days)])
+		return x.get("pruned")
 
 	def prune(self, days=7, include_roles=[]):
 
@@ -394,7 +432,8 @@ class Guild:
 			The roles to be considered to prune (by default, a user with a role can't be pruned)
 		"""
 
-		self.__bot.api(f"/guilds/{self.id}/prune", "POST", params={"days":days,"include_roles":include_roles})
+		x = self.__bot.api(f"/guilds/{self.id}/prune", "POST", params=[*[("include_roles",role) for role in include_roles], ("days",days)])
+		return x.get("pruned")
 
 class Channel:
 
@@ -523,8 +562,8 @@ class Channel:
 				else:
 					raise TypeError("Files should be a list or a string")
 				form.add_field(f"file {i}", c, filename=file)
-			return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", data=form),self.__bot)
-		return Message(self.__bot.api(f"/channels/{self.id}/messages", "POST", json={"content":content,**kwargs}),self.__bot)
+			return self.__bot.api(f"/channels/{self.id}/messages", "POST", [Message,self.__bot], data=form)
+		return self.__bot.api(f"/channels/{self.id}/messages", "POST", [Message,self.__bot], json={"content":content,**kwargs})
 
 	def get_messages(self,limit=50,before=None,after=None):
 
@@ -546,7 +585,7 @@ class Channel:
 		if after:
 			params["after"] = after
 
-		messages = self.__bot.api(f"/channels/{self.id}/messages","GET",params=params)
+		messages = self.__bot.api(f"/channels/{self.id}/messages","GET", params=params)
 		return [Message(message,self.__bot) for message in messages]
 
 	def get_message(self,message_id):
@@ -557,7 +596,7 @@ class Channel:
 		Return :class:`Message`
 		"""
 
-		return Message(self.__bot.api(f"/channels/{self.id}/messages/{message_id}"),self.__bot)
+		return self.__bot.api(f"/channels/{self.id}/messages/{message_id}", "GET", [Message,self.__bot])
 
 	def get_invites(self):
 
@@ -590,7 +629,7 @@ class Channel:
 		Return :class:`Invite`
 		"""
 
-		return Invite(self.__bot.api(f"/channels/{self.id}/invites","POST",json=kwargs),self.__bot)
+		return self.__bot.api(f"/channels/{self.id}/invites","POST",[Invite,self.__bot],json=kwargs)
 
 	def create_webhook(self,name,avatar=None):
 
@@ -605,7 +644,7 @@ class Channel:
 		Return :class:`Webhook`
 		"""
 
-		return Webhook(self.__bot.api(f"/channels/{self.id}/webhooks","POST",json={"name":name,"avatar":avatar}),self.__bot,channel=self)
+		return self.__bot.api(f"/channels/{self.id}/webhooks","POST", [Webhook,self.__bot,self],json={"name":name,"avatar":avatar})
 
 	def bulk_delete(self,messages_ids):
 
@@ -894,7 +933,7 @@ class User:
 	@property
 	@Cache
 	def dm(self):
-		return Channel(self.__bot.api(f"/users/@me/channels","POST",json={"recipient_id":self.id}),self.__bot)
+		return self.__bot.api(f"/users/@me/channels","POST", [Channel, self.__bot],json={"recipient_id":self.id})
 
 class Member(User):
 
@@ -969,7 +1008,7 @@ class Member(User):
 
 		if hasattr(self,"id"):
 			user_id=self.id
-			delete_member = self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}","DELETE")
+			self.__bot.api(f"/guilds/{self.guild_id}/members/{user_id}","DELETE")
 
 	def ban(self, reason=None):
 

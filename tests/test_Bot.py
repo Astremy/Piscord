@@ -3,6 +3,8 @@ from .imports import Bot,Permission
 from unittest.mock import Mock,patch
 import pytest
 import json
+import threading
+import asyncio
 
 with open("calls.json","r") as f:
 	calls = json.load(f)
@@ -20,7 +22,16 @@ Bot.api_call.side_effect = api_call
 def bot_ready():
 	bot = Bot("")
 	bot.events_list["READY"][1](bot,calls["READY"])
-	return bot
+
+	def start_api():
+		asyncio.run(bot.call_api())
+	bot.session = True
+	x = threading.Thread(target=start_api)
+	x.start()
+
+	yield bot
+
+	bot.session = None
 
 @pytest.fixture()
 def bot_guilds(bot_ready):

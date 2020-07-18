@@ -12,7 +12,7 @@ It thus allows to do much more easily various things like bot control panels.
 [Piscord Documentation](https://piscord.readthedocs.io/)
 
 ### Tutorial
-[Piscord Documentation](https://piscord.readthedocs.io/en/latest/tutorial.html) (Only in French for the moment)
+[Piscord Tutorial](https://piscord.readthedocs.io/en/latest/tutorial.html) (Only in French for the moment)
 
 #### How to use it
 You can install it with pip : pip install piscord

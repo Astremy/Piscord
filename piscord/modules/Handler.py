@@ -26,7 +26,7 @@ class Handler(Bot):
 
 	def verif(self, message):
 		if message.content.startswith(self.prefix):
-			return message.content.split()[0][len(self.prefix):]
+			return message.content[len(self.prefix):].split()[0]
 
 	def command(self, arg):
 
@@ -35,7 +35,7 @@ class Handler(Bot):
 			return
 
 		if type(arg) == str:
-			return add_event
+			return add_command
 
 		self.commands[arg.__name__] = arg
 		return
@@ -85,7 +85,7 @@ class Ext_Handler:
 			return
 
 		if type(arg) == str:
-			return add_event
+			return add_command
 
 		self.__handler.commands[arg.__name__] = arg
 		self.commands.append(arg.__name__)

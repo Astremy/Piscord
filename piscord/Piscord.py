@@ -1,6 +1,8 @@
 import aiohttp
 import asyncio
 from threading import Thread
+from collections import deque
+import time
 
 from .Events import Events
 from .Errors import *
@@ -36,7 +38,7 @@ class Utility:
 
 class Bot(Thread,Utility,Bot_Element):
 
-	def __init__(self,token,api_sleep=0.05,shards=[0,1]):
+	def __init__(self,token,api_sleep=0.06,shards=[0,1]):
 		self.events_list = {}
 		Events.__init__(self)
 		Thread.__init__(self)
@@ -49,6 +51,9 @@ class Bot(Thread,Utility,Bot_Element):
 		self.presence = {"op": 3,"d": {"game":None,"status":None,"afk":False,"since":0}}
 		self.gateway = None
 		self.shards = shards
+		self.api_queue = deque([])
+		self.sleep_retry_after = None
+		self.session = None
 
 	def def_event(self,event,name):
 
@@ -96,34 +101,31 @@ class Bot(Thread,Utility,Bot_Element):
 		else:
 			headers = {
 				"Authorization": f"Bot {self.token}",
-				"User-Agent": "Bot"
+				"User-Agent": "Bot",
+				"X-RateLimit-Precision":"millisecond"
 			}
 
-		async with aiohttp.ClientSession() as session:
-			async with session.request(method, self.api_url+path,headers = headers,**kwargs) as response:
-				try:
-					assert 200 <= response.status < 300
-					if response.status in [200,201]:
-						return await response.json()
-				except:
-					if response.status == 400:
-						return BadRequestError()
-					elif response.status == 403:
-						return PermissionsError()
-					else:
-						return Error()
+		async with self.session.request(method, self.api_url+path,headers = headers,**kwargs) as response:
+			if 200 <= response.status < 300:
+				if response.status in [200,201]:
+					return await response.json()
+			elif response.status == 400:
+				return BadRequestError()
+			elif response.status == 403:
+				return PermissionsError()
+			elif response.status == 429:
+				retry = await response.json()
+				return RateLimitedError(retry["retry_after"])
+			else:
+				return Error()
 
-	def api(self, path, method="GET", **kwargs):
-		loop = asyncio.new_event_loop()
-		output = loop.run_until_complete(self.api_call(path,method,**kwargs))
-		loop.run_until_complete(asyncio.sleep(self.api_sleep))
-		loop.close()
-		if output and isinstance(output,Error):
-			raise output
-		else:
-			return output
+	def api(self, path, method="GET", out=None, **kwargs):
+		response = API_Response(self.api_sleep)
+		self.api_queue.append([response,out,path,method,kwargs])
+		return response
 
 	async def begin(self):
+		self.session = aiohttp.ClientSession()
 		response = await self.api_call("/gateway")
 		await self.__main(response["url"])
 
@@ -131,6 +133,7 @@ class Bot(Thread,Utility,Bot_Element):
 		events = self.events_list
 		gateway = Gateway(f"{url}?v=7&encoding=json", self.token, presence=self.presence)
 		self.gateway = gateway
+		asyncio.create_task(self.call_api())
 		async for data in gateway.connect(shards = self.shards):
 			if data["op"] == 0:
 				if data["t"] in events:
@@ -146,6 +149,30 @@ class Bot(Thread,Utility,Bot_Element):
 						self.voices[voice["guild_id"]] = x
 						asyncio.create_task(x.run())
 				self.in_wait_voices = []
+		self.call_api_task.cancel()
+
+	async def send_call_api(self, request):
+		out = await self.api_call(request[2],request[3],**request[4])
+		if isinstance(out, Error):
+			if isinstance(out, RateLimitedError):
+				self.sleep_retry_after = out.retry_after/1000
+				self.api_queue.appendleft(request)
+			else:
+				print(f"Error : {out.error} | Request : {request[2]}")
+			return
+		if request[1]:
+			out = request[1][0](out,*request[1][1:])
+		object.__setattr__(request[0],"output",out)
+
+	async def call_api(self):
+		while self.session:
+			await asyncio.sleep(self.api_sleep)
+			if self.api_queue:
+				if self.sleep_retry_after:
+					await asyncio.sleep(self.sleep_retry_after)
+					self.sleep_retry_after = None
+				request = self.api_queue.popleft()
+				asyncio.create_task(self.send_call_api(request))
 
 	def set_presence(self, presence,type=0,url=None):
 		self.presence["d"]["game"] = {

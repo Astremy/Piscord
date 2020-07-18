@@ -8,13 +8,13 @@ with open("requirements.txt", "r") as file:
 
 setuptools.setup(
     name="piscord",
-    version="1.5.0",
+    version="1.5.1",
     author="Astremy",
     description="Piscord is a python framework to communicate with the Discord api.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Astremy/Piscord",
-    packages=["piscord"],
+    packages=["piscord","piscord.modules"],
     license="LICENSE",
     classifiers=[
         "Programming Language :: Python :: 3",

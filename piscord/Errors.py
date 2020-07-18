@@ -16,6 +16,12 @@ class BadRequestError(Error):
 	def __init__(self):
 		self.error = "Your query was incomplete or bad"
 
+class RateLimitedError(Error):
+
+	def __init__(self, retry_after):
+		self.error = "You have been rate-limited"
+		self.retry_after = retry_after
+
 class TokenError(Error):
 
 	def __init__(self):
