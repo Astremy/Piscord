@@ -89,7 +89,6 @@ class Bot(Thread,Utility,Events):
 				try:
 					assert 200 <= response.status < 300
 					if response.status in [200,201]:
-						print(await response.json())
 						return await response.json()
 				except:
 					if response.status == 400:
@@ -132,6 +131,21 @@ class Bot(Thread,Utility,Events):
 						self.voices[voice["guild_id"]] = x
 						asyncio.create_task(x.run())
 				self.in_wait_voices = []
+
+	def set_presence(self, presence,**kwargs):
+		payload = {
+			"op": 3,
+			"d": {
+				"game":{
+					"name":presence,
+					"type": 0,
+					"timestamps":{}
+					},
+				"status":kwargs.get("status",None),
+				"afk":False,
+				"since":None
+		}}
+		asyncio.run_coroutine_threadsafe(self.gateway.send(payload),self.gateway.loop)
 
 	def run(self):
 		self.loop = asyncio.new_event_loop()

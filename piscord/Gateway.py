@@ -38,7 +38,6 @@ class Gateway:
 						continue
 				await self.ws.close()
 				return
-			print(msg)
 			data = json.loads(msg)
 			x = data.get("s")
 			if x:
