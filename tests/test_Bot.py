@@ -62,6 +62,14 @@ def test_guilds_funcs(bot_guilds):
 	bot = bot_guilds
 	guild = bot.guilds[0]
 
+	channels = guild.get_channels()
+	for i,j in zip(guild.channels,channels):
+		assert i.id == j.id
+
+	roles = guild.get_roles()
+	for i,j in zip(guild.roles,roles):
+		i.id == j.id
+
 	channel = guild.create_channel(name="test")
 	role = guild.create_role(name="neko")
 

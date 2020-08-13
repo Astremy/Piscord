@@ -74,7 +74,7 @@ class Voice_Client:
 				"token": self.token
 		}}
 		async for data in gateway.connect(payload):
-			
+
 			if data["op"] == 2:
 				self.ip = data["d"]["ip"]
 				self.port = data["d"]["port"]
@@ -95,3 +95,35 @@ class Voice_Client:
 
 	def stop(self):
 		self.gateway.stop()
+
+class AudioStream:
+	"""
+	To understand how this class works and why, please refer to the following documents:
+	- https://discord.com/developers/docs/topics/voice-connections
+	- https://www.rfcreader.com/#rfc3550_line548
+	and more specifically to this section of discord's documentation:
+	- https://discord.com/developers/docs/topics/voice-connections#encrypting-and-sending-voice-voice-packet-structure
+	"""
+
+	def __init__(self):
+		self.sequence = randint(0, 65_535)
+		self.ssrc = randint(0, 65_535)
+		self.timestamp = 0
+
+	def encode_packet(self, audio):
+		packet = bytearray()
+		packet.append(0x80)
+		packet.append(0x78)
+		packet.append(self.sequence)
+		packet.append(self.timestamp)
+		packet.append(self.ssrc)
+		packet.append(self.encode_voice_data(audio))
+		return bytes(packet)
+
+	def encode_voice_data(self, audio: str):
+		"""
+		Todo: implement Opus audio encryption and increment timestamp accordingly 
+		"""
+		out, err = ffmpeg.input(audio).output('pipe:', f='opus').run(capture_stdout=True, capture_stderr=True)
+		print(err)
+		return out
