@@ -9,10 +9,7 @@ In particular, it simplifies the creation of a bot that interacts with a Web ser
 It thus allows to do much more easily various things like bot control panels.
 
 ### Documentation
-[Piscord Documentation](https://piscord.astremy.com/) (Only in French for the moment)
-
-### Tutorial
-[Piscord Documentation](https://github.com/Astremy/Piscord_Tutorial) (Only in French for the moment)
+[Piscord Documentation](https://piscord.readthedocs.io/)
 
 #### How to use it
 You can install it with pip : pip install Piscord

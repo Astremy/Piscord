@@ -6,12 +6,13 @@ from .Errors import TokenError,ConnexionError
 
 class Gateway:
 
-	def __init__(self, url, token, auth_op = 10, events_code = 0, presence = None):
+	def __init__(self, url, token, auth_op = 10, events_code = 0, heartbeat_code = 1, presence = None):
 		self.url = url
 		self.token = token
 		self.auth_op = auth_op
 		self.last_sequence = 0
 		self.events_code = events_code
+		self.heartbeat_code = heartbeat_code
 		self.session_id = None
 		self.presence = presence
 		self.error = None
@@ -28,19 +29,16 @@ class Gateway:
 			except Exception as e:
 				if e.code in [1000, 1001, 1006]:
 					await self.ws.close()
-					print("reconnect")
 					if self.session_id and self.last_sequence:
-						print("debug")
 						await self.ws.close()
 						for i in range(5):
-							try:
-								ws,msg = await self._reconnect()
+							ws,msg = await self._reconnect()
+							if msg:
 								data = json.loads(msg)
 								self.ws = ws
 								self.interval = data["d"]["heartbeat_interval"]
 								break
-							except Exception as e:
-								await ws.close()
+							else:
 								await asyncio.sleep(1)
 						else:
 							self.error = ConnexionError("You've lost the connection to the server")
@@ -73,7 +71,10 @@ class Gateway:
 					"large_threshold": 250,
 					"presence":self.presence
 				}}
-				await self.send(payload)
+				if action:
+					await self.send(action)
+				else:
+					await self.send(payload)
 			if data["op"] == self.events_code:
 				if data["t"] == "READY":
 					self.session_id = data["d"]["session_id"]
@@ -88,16 +89,20 @@ class Gateway:
 				"seq": self.last_sequence
 		}}
 		ws = await websockets.connect(self.url, ping_interval = None)
-		await ws.recv()
-		await self.send(payload)
-		msg = await ws.recv()
+		msg = None
+		try:
+			await ws.recv()
+			await self.send(payload)
+			msg = await ws.recv()
+		except:
+			await ws.close()
 		return ws, msg
 
 	async def __heartbeat(self, ws):
 		while True:
 			await asyncio.sleep(self.interval / 1000)
 			if not self.ws.closed:
-				await self.send({"op": 1,"d": self.last_sequence})
+				await self.send({"op": self.heartbeat_code,"d": self.last_sequence})
 
 	async def send(self, payload):
 		await self.ws.send(json.dumps(payload))

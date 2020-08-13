@@ -11,13 +11,13 @@ class Voice:
 		self.deaf = voice.get("deaf",None)
 		self.state = 0
 		self.gateway = None
-		#self.client = Voice_Client(self.guild_id,self.channel_id)
+		self.client = Voice_Client(self.guild_id,bot.user.id)
 		self.__bot = bot
 
 	async def run(self):
 		self.loop = asyncio.get_event_loop()
 		response = await self.__bot.api_call("/gateway")
-		gateway = Gateway(f"{response['url']}?v=6&encoding=json", self.__bot.token)
+		gateway = Gateway(f"{response['url']}?v=7&encoding=json", self.__bot.token)
 		self.gateway = gateway
 		async for data in gateway.connect():
 			if data["op"] == 0:
@@ -30,7 +30,7 @@ class Voice:
 							"mute": self.mute,
 							"deaf": self.deaf
 					}})
-				'''
+				
 				if data["t"] == "VOICE_SERVER_UPDATE":
 					if data["d"]["guild_id"] == self.guild_id:
 						self.client.token = data["d"]["token"]
@@ -41,15 +41,15 @@ class Voice:
 				if self.client.session_id and self.client.token and not self.state:
 					self.state = 1
 					asyncio.create_task(self.client.run())
-				'''
+				
 
 	def stop(self):
-		#if self.client.gateway:
-		#	self.client.stop()
+		if self.client.gateway:
+			self.client.stop()
 		if self.gateway:
 			self.gateway.stop()
 
-'''
+
 class Voice_Client:
 
 	def __init__(self, guild_id, user_id):
@@ -59,10 +59,11 @@ class Voice_Client:
 		self.token = None
 		self.endpoint = None
 		self.gateway = None
+		self.secret_key = None
+		self.mode = None
 	
 	async def run(self):
-		print("aaa")
-		gateway = Gateway(f"wss://{self.endpoint[:-3]}/?v=4", "", 8, False)
+		gateway = Gateway(f"wss://{self.endpoint[:-3]}/?v=4", "", auth_op = 8, events_code = -1, heartbeat_code = 3)
 		self.gateway = gateway
 		payload = {
 			"op": 0,
@@ -73,8 +74,8 @@ class Voice_Client:
 				"token": self.token
 		}}
 		async for data in gateway.connect(payload):
+			
 			if data["op"] == 2:
-				print(data)
 				self.ip = data["d"]["ip"]
 				self.port = data["d"]["port"]
 				payload = {
@@ -87,9 +88,10 @@ class Voice_Client:
 							"mode": "xsalsa20_poly1305_lite"
 				}}}
 				await gateway.send(payload)
+
 			if data["op"] == 4:
-				print(data)
+				self.mode = data["d"]["mode"]
+				self.secret_key = data["d"]["secret_key"]
 
 	def stop(self):
 		self.gateway.stop()
-'''

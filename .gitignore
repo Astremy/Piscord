@@ -1,0 +1,16 @@
+# Pycache
+__pycache__/
+
+# Package
+build/
+dist/
+*.egg-info/
+
+# Unit test
+.pytest_cache/
+
+# Sphinx documentation
+docs/build/
+
+# Test File
+test.py
