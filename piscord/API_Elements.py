@@ -621,7 +621,7 @@ class Channel:
 		if len(messages_ids) > 100:
 			raise ValueError("Max number exceeded")
 
-		self.__bot.api(f"POST/channels/{self.id}/messages/bulk-delete","POST",json=messages_ids)
+		self.__bot.api(f"/channels/{self.id}/messages/bulk-delete","POST",json={"messages":messages_ids})
 
 	def purge(self, max, before = None, after = None):
 
@@ -641,7 +641,7 @@ class Channel:
 		if max > 100:
 			raise ValueError("Max number exceeded")
 
-		messages = [message.id in message in self.get_messages(limit=max,before=before,after=after)]
+		messages = [message.id for message in self.get_messages(limit=max,before=before,after=after)]
 		self.bulk_delete(messages)
 
 	def typing(self):
@@ -730,6 +730,7 @@ class Message:
 		self.id = message.get("id")
 		self.channel_id = message.get("channel_id")
 		self.guild_id = message.get("guild_id")
+		self.author = None
 		if "author" in message:
 			self.author = User(message["author"],bot)
 		if "member" in message:
@@ -907,7 +908,9 @@ class Member(User):
 	nick:
 		The username of member in the guild
 	roles: :class:`Role`
-		List of member roles in the guild
+		List of member roles in the guild if the user if the guild is in the bot cache
+	roles_id:
+		List of the roles id
 	hoisted_role:
 		Not implemented
 	joined_at:
@@ -928,7 +931,8 @@ class Member(User):
 		if "user" in member:
 			User.__init__(self,member["user"],bot)
 		self.nick = member.get("nick")
-		self.roles = [role for role in member.get("roles",[])]
+		self.roles_id = member.get("roles",[])
+		self.roles = None
 		self.hoisted_role = member.get("hoisted_role")
 		self.joined_at = member.get("joined_at")
 		self.premium_since = member.get("premium_since")
@@ -938,6 +942,13 @@ class Member(User):
 		self.__bot = bot
 
 		self.guild = bot.get_element(bot.guilds,id=self.guild_id)
+
+		if self.guild:
+			self.roles = []
+			for i in range(len(self.roles_id)):
+				role = bot.get_element(self.guild.roles,id=self.roles_id[i])
+				if role:
+					self.roles.append(role)
 
 	def edit(self, **modifs):
 

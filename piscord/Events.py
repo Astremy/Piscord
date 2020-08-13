@@ -181,7 +181,9 @@ class Events:
 				self.guild_id = data["guild_id"]
 
 				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
-				self.guild.members.remove(bot.get_element(self.guild.members, id=self.id))
+				__member = bot.get_element(self.guild.members, id=self.id)
+				if __member:
+					self.guild.members.remove(__member)
 
 		@self.def_event("GUILD_ROLE_CREATE","role_create")
 		class Event(Role):

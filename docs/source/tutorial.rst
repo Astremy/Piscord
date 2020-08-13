@@ -359,21 +359,15 @@ pour kick :
 		# On récupère le contenu du message, qu'on sépare en liste de mot
 
 		if mes[0] == "!kick":
-			role_id = message.author.roles
-			# On récupère la liste des ids des rôles de l'auteur
-			guild_roles = message.guild.roles
-			# On récupère la liste des rôles du serveur
 			perm = False
 
-			for i in guild_roles:
-			# On parcourt la liste des rôles de la guild
-				if i.id in role_id:
-				# Si le rôle i a le même id qu'un des rôles de l'auteur
-					if i.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
-					# On vérifie si le rôle en question à les perms pour kick (admin ou kick)
+			for role in message.author.roles:
+			# On parcourt la liste des rôles du membre
+				if role.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
+				# On vérifie si le rôle en question à les perms pour kick (admin ou kick)
 
-						perm = True
-						break
+					perm = True
+					break
 
 			if perm:
 				if len(message.mentions):

@@ -72,7 +72,7 @@ class Perm(int):
 		if isinstance(n,Perm):
 			return (n.real & self.real) == n.real
 		else:
-			return (int(n) & self.real) == n.real
+			return (int(n) & self.real) == int(n)
 
 	def __ne__(self,n):
 		return not self == n
@@ -83,6 +83,7 @@ class Perm(int):
 	def __sub__(self,n):
 		if isinstance(n,Perm):
 			n = n.real
+		n = int(n)
 
 		out = Perm(self.real - (n & self.real))
 		return out
