@@ -281,3 +281,175 @@ Exemple
 	Channel.send(embed=embed.to_json())
 
 Quand l'on envoie un embed dans un channel, il ne faut pas oublier de mettre un .to_json, comme pour le Allowed_Mentions.
+
+
+Les Permissions
+---------------
+
+Comment fonctionnent les permissions ?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sur discord, il existe plusieurs niveaus de permissions donnant accès
+aux utilisateurs à certaines fonctionnalitées.
+Par exemple, prennons la permission ``KICK_MEMBERS`` donnera le droit
+à l'utilisateur de kick un membre du serveur actuel. Mais comment
+peut-on par exemple, vérifier les permissions que possède un membre ?
+
+.. code-block:: python
+
+    from Piscord import Bot, Permission
+    # Import des classes Bot et Permission
+
+    bot = Bot("Token")
+    # Création d'un Bot avec votre token
+
+    @bot.event
+    def on_message(message):
+        everyone = message.guild.roles[0]
+        # On récupère le rôle @everyone
+
+        print(everyone.permissions)
+        # On affiche dans la console les permissions du rôle
+
+    bot.run()
+    # On lance le bot en mode non bloquant
+
+Comme vous pouvez le remarquer si vous testez le bout de code plus
+haut, on ne reçois dans la console qu'un nombre dans la console.
+En effet, ce nombre correspond à la valeur décimal des permissions qui
+sont exprimées en binaire.
+Comment cette fois si, vérifier si une personne possède une permission
+en particulier ? Reprenons le code plus haut :
+
+.. code-block:: python
+
+    @bot.event
+    def on_message(message):
+        everyone = message.guild.roles[0]
+        # On récupère le rôle @everyone
+
+        if everyone.permissions == Permission.SPEAK:
+            # On vérifie si la permissions accordée au rôle everyone est bien celle de parler
+            
+            print("Le rôle everyone peut bien parler dans les channels vocaux")
+            # On affiche la confirmation
+
+    bot.run()
+    # On lance le bot en mode non bloquant
+
+Exemple d'utilisation
+~~~~~~~~~~~~~~~~~~~~~
+
+Voici un exemple de commande utilisant les permissions, une commande
+pour kick :
+
+.. code-block:: python
+
+    from Piscord import Bot, Permission
+
+    bot = Bot("Token")
+
+    @bot.event
+    def on_message(message):
+        mes = message.content.split()
+        # On récupère le contenu du message, qu'on sépare en liste de mot
+
+        if mes[0] == "!kick":
+            role_id = message.author.roles
+            # On récupère la liste des ids des rôles de l'auteur
+            guild_roles = message.guild.roles
+            # On récupère la liste des rôles du serveur
+            perm = False
+            # Booléen vérifiant si il a les permissions
+            for i in guild_roles:
+            # On parcourt la liste des rôles de la guild
+                if i.id in role_id:
+                # Si le rôle i a le même id qu'un des rôles de l'auteur
+                    if i.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
+                    # On vérifie si le rôle en question à les perms pour kick (admin ou kick)
+                        perm = True
+                        # Alors on passe le booléen à True
+                        break
+                        # Et on casse la boucle
+            if perm:
+                if len(message.mentions):
+                # On vérifie si un user à été mentionné
+                    member = message.mentions[0]
+                    # On récupère la première mentions du message
+                    client.get_element(message.guild.members, id=member.id).kick()
+                    # On récupère l'objet Member correspndantà la mention et on kick le membre
+                    message.channel.send(f"{message.mentions[0]} has been kicked")
+                    # On envoie un message de confirmation
+                else:
+                    message.channel.send("You have to mentions a member")
+                    # Si il n'y a pas de mention, il renvoie un message demandant de mentionner
+            else:
+                message.channel.send("You do not have the permissions")
+
+Quelques opérateurs sur les Permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Comme vu dans l'exemple précédent, il existe plusieurs opérateur
+permettant de faire des vérifications de permissions. Il en existe
+actuellement 3. Le ``+``, le ``-``, et le ``==``.
+Reprenons l'exemple plus haut :
+
+.. code-block:: python
+
+    if role.permissions == Permission.KICK_MEMBERS + Permission.ADMINISTRATORS:
+        ...
+
+Ici, grâce à l'opérateur ``+`` et ``==``, on peut vérifier si le les
+permissions du role voulu sont bien ``KICK_MEMBERS`` et
+``ADMINISTRATORS``.
+Le dernier opérateur peut être utile dans le cas des Overwrite par
+exemple, que nous verrons juste après.
+Ainsi, le ``+`` rajoute une permission si elle n'existe pas, le ``-``
+l'enlève si elle existe, et le ``==`` vérifie si le rôle a les permissions.
+Aussi, on peut avoir des variantes comme le ``+=`` qui permet d'ajouter
+la permission en la réaffectant. On peut également vérifier si un rôle a une
+permissions dans une liste de permissions donné avec le mot clé ``in``.
+Par exemple :
+
+.. code-block:: python
+
+    if role.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
+        ...
+
+Ici, on va vérifier si le rôle voulu possède au moins la permission ``KICK_MEMBERS`` ou ``ADMINISTRATORS``.
+
+
+Les Overwrites
+~~~~~~~~~~~~~~
+
+L'objet Overwrite permet, comme son nom l'indique, de réecrire les
+permissions de quelque chose, comme un membre, un rôle, ou un channel.
+Nous resterons ici sur le cas des channels.
+L'objet Channel possède un attribut permettant de récupérer les
+Overwrite de ce channel. Cet attribut est
+``Channel.permission_overwrite``, et il retourne une liste d'un élément,
+étant les Overwrite de ce dit channel.
+Ainsi, on peut récupérer les permissions que possède le rôle @everyone
+d'un channel, et les modifier. Voyons un exemple. Admettons que nous
+voulons enlever la permission au rôle @everyone de parler sur un channel
+voulu
+
+.. code-block:: python
+
+    # Admettons être dans l'event on_message
+
+    perms = message.channel.permission_overwrites[0]
+    # On récupère l'Overwrite du channel
+
+    allow = perms.allow - Permission.SEND_MESSAGE
+    # On définit les permissions autorisées, ici toutes les permissions du channel, en enlevant celle de parler
+
+    deny = perms.deny + Permission.SEND_MESSAGE
+    # On définit les permissions interdites, ici toutes les permissions du channel, en ajoutant celle de parler
+
+    perms.edit(allow=allow, deny=deny)
+    # Enfin, on applique les changement au channel en utilisant la méthode edit de l'objet Overwrite
+
+Ici, dans la variable ``allow``, on peut voir que l'on fait une soustraction de 2 permissions.
+Ainsi, on récupère la valeur des permissions du rôle @everyone,
+et on y soustrait la permission ``Permission.SEND_MESSAGES`` pour enfin appliquer les changements.
