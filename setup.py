@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="Piscord",
+    name="piscord",
     version="1.3.2",
     author="Astremy",
     description="Piscord is a python framework to communicate with the Discord api.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Astremy/Piscord",
-    packages=setuptools.find_packages(),
+    packages=["piscord"],
     license="LICENSE",
     classifiers=[
         "Programming Language :: Python :: 3",
