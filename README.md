@@ -11,14 +11,14 @@ It thus allows to do much more easily various things like bot control panels.
 ### Documentation
 [Piscord Documentation](https://piscord.readthedocs.io/)
 
+### Tutorial
+[Piscord Documentation](https://piscord.readthedocs.io/en/latest/tutorial.html) (Only in French for the moment)
+
 #### How to use it
-You can install it with pip : pip install Piscord
+You can install it with pip : pip install piscord
 
 Used Modules :
-- asyncio
-- json
 - aiohttp
-- threading
 - websockets
 
 Author : Astremy
@@ -26,3 +26,5 @@ Author : Astremy
 Discord : [Piscord](https://discord.com/invite/U9X7XzP)
 
 This project is licensed under the terms of the MIT license : [License](https://github.com/Astremy/Piscord/blob/master/LICENSE)
+
+_Although it is common to have a v1.x.x stable, piscord is still in beta, we are trying to stabilise the API during the v1.x.x phase and avoid breaking backward compatibility but please keep in mind this is still a provisional API_

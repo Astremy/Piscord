@@ -52,10 +52,21 @@ class Voice:
 			self.gateway.stop()
 
 	def play(self, name):
+		print("bip1")
+		payload = {
+			"op":5,
+			"d": {
+				"speaking": 1,
+				"delay": 0,
+				"ssrc": 1
+		}}
+		asyncio.run(self.client.gateway.send(payload))
 		ip = socket.gethostbyname(self.client.endpoint)
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		sending = AudioStream()
+		print("bip2")
 		self.socket.sendto(sending.encode_packet(name), (ip, self.client.port))
+		print("bip3")
 
 class Voice_Client:
 
@@ -125,7 +136,7 @@ class AudioStream:
 		self.packet_add(packet, self.timestamp, 4)
 		self.packet_add(packet, self.ssrc, 4)
 
-		return bytes(packet) + self.encode_voice_data(audio)[:-10000]
+		return bytes(packet) + b"r"*1000 #self.encode_voice_data(audio)[:5000]
 
 	def packet_add(self, packet, value, bytes):
 		for i in range(bytes,0,-1):
@@ -143,6 +154,5 @@ class AudioStream:
 		try:
 			output = subprocess.Popen(f"ffmpeg -i {audio} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1",stdout=subprocess.PIPE).stdout
 		except FileNotFoundError as e:
-			print(e)
 			raise ProcessLookupError("You should install ffmpeg to use voices")
 		return output.read()

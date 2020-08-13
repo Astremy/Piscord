@@ -6,3 +6,5 @@ Piscord's documentation
 
 	tutorial
 	api
+	permissions
+	oauth

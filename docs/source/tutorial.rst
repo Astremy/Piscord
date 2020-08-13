@@ -27,9 +27,13 @@ Quels sont les prérequis pour l'utiliser ?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Les prérequis demandés pour utiliser piscord sont simples
+
 - Savoir lire une doc (ce que vous êtes en train de faire)
+
 - Connaitres les bases (variables, boucles, comparaison, fonctions)
+
 - Savoir utiliser des classes
+
 - Savoir débugguer
 
 De plus, connaitre les décorateurs est utile mais pas indispensable vu qu'ils sont utilisés partout mais l'on ne s'attarde pas sur leur fonctionnement.
@@ -54,7 +58,7 @@ Pour mettre en ligne votre premier bot, récupérez le **token** de ce dernier e
 
 .. code-block:: python
 
-	from Piscord import Bot
+	from piscord import Bot
 	# Import de la classe Bot a partir de la librairie
 
 	bot = Bot("Token")
@@ -69,7 +73,7 @@ Pour mettre en ligne votre premier bot, récupérez le **token** de ce dernier e
 	# Lancer le bot en mode bloquant
 
 Information :
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 Vous avez deux façons de créer un event :
 - En utilisant @bot.event et en renommant la fonction du nom de l'event
@@ -100,14 +104,14 @@ Aussi, vous pouvez lancer le bot en mode bloquant (le code après ne sera pas ex
 
 
 Ping Pong
-^^^^^^^^^
+~~~~~~~~~
 
 Une manière souvent utilisé pour illustrer la création d'un pemier bot est une commande ("ping") qui fera répondre une autre ("pong") au bot.
 Voyons comment le faire avec Piscord :
 
 .. code-block:: python
 
-	from Piscord import Bot
+	from piscord import Bot
 
 	bot = Bot("Token")
 
@@ -192,9 +196,13 @@ Arguments
 ^^^^^^^^^
 
 Il y a différents arguments que l'on peut mettre dans le send :
+
 - tts : Une valeur True ou False, si le message envoyé est un text-to-speech.
+
 - files : Une liste des nom de fichiers que l'on souhaite envoyer (si l'on en envoie).
+
 - embed : Un embed, nous verrons plus loin comment en faire.
+
 - allowed_mentions : Un objet Allowed_Mentions, nous verrons également comment le faire plus loin.
 
 ### Allowed_Mentions
@@ -205,8 +213,11 @@ Les mentions autorisés permettent d'empêcher que le bot mentionne par mégarde
 Il a plusieurs paramètres : 
 Parse : Parse est essentiel quand on joue avec la classe. Elle indique les types de mentions a autoriser, même si on doit les détailler après.
 C'est une liste qui peut prendre les arguments que l'on veut selon ce que l'on souhaite faire.
+
 - "everyone" : Autorise les mentions d'`@everyone` et `@here`
+
 - "users" : Permet de mentionner les utilisateurs.
+
 - "roles" : Permet de mentionner les rôles.
 
 Ainsi, par exemple, vous pouvez faire :
@@ -227,7 +238,7 @@ Roles : Roles est comme Users, mais pour les rôles. Si on ne permet pas au bot 
 permet de spécifier l'id des rôles a pouvoir mentionner quand même.
 
 Exemple
-"""""""
+~~~~~~~
 
 Voici un exemple de commande que l'on peut faire, ou cela se trouve utile :
 
@@ -255,9 +266,13 @@ Ces derniers ont de nombreuses propriétés, et l'on s'attardera pas sur toutes.
 visitez [La Documentation relative aux Embed](https://piscord.astremy.com/#Embed) ou [Les informations de Discord sur les Embed](https://discord.com/developers/docs/resources/channel#embed-object).
 
 Voici les plus utiles :
+
 - title : Une chaine de caractère correspondante au titre de l'Embed.
+
 - description : Le texte dans l'Embed.
+
 - color : La couleur de l'Embed (sous format hexadécimal passé en décimal).
+
 - Image : Un objet image correspondant à une image principale de l'Embed. (Voir la documentation)
 
 De plus, les Embed ont ce que l'on appelle les fields.
@@ -265,7 +280,7 @@ Ce sont des zones qui contiennent chacun leur titre et texte que l'on met dans u
 Pour ajouter un field a un embed, on utilise Embed.add_field(name = name, value = value, inline = inline)
 
 Exemple
-"""""""
+~~~~~~~
 
 .. code-block:: python
 
@@ -297,45 +312,38 @@ peut-on par exemple, vérifier les permissions que possède un membre ?
 
 .. code-block:: python
 
-    from Piscord import Bot, Permission
-    # Import des classes Bot et Permission
+	from piscord import Bot, Permission
 
-    bot = Bot("Token")
-    # Création d'un Bot avec votre token
+	bot = Bot("Token")
 
-    @bot.event
-    def on_message(message):
-        everyone = message.guild.roles[0]
-        # On récupère le rôle @everyone
+	@bot.event
+	def on_message(message):
+		everyone = message.guild.roles[0]
+		# On récupère le rôle @everyone
 
-        print(everyone.permissions)
-        # On affiche dans la console les permissions du rôle
+		print(everyone.permissions)
+		# On affiche dans la console les permissions du rôle
 
-    bot.run()
-    # On lance le bot en mode non bloquant
+	bot.run()
 
 Comme vous pouvez le remarquer si vous testez le bout de code plus
-haut, on ne reçois dans la console qu'un nombre dans la console.
-En effet, ce nombre correspond à la valeur décimal des permissions qui
+haut, on ne reçois dans la console qu'un simple nombre.
+En fait, ce nombre correspond à la valeur décimal des permissions qui
 sont exprimées en binaire.
 Comment cette fois si, vérifier si une personne possède une permission
 en particulier ? Reprenons le code plus haut :
 
 .. code-block:: python
 
-    @bot.event
-    def on_message(message):
-        everyone = message.guild.roles[0]
-        # On récupère le rôle @everyone
+	@bot.event
+	def on_message(message):
+		everyone = message.guild.roles[0]
+		# On récupère le rôle @everyone
 
-        if everyone.permissions == Permission.SPEAK:
-            # On vérifie si la permissions accordée au rôle everyone est bien celle de parler
+		if everyone.permissions == Permission.SPEAK:
+			# On vérifie si la permissions accordée au rôle everyone est bien celle de parler
             
-            print("Le rôle everyone peut bien parler dans les channels vocaux")
-            # On affiche la confirmation
-
-    bot.run()
-    # On lance le bot en mode non bloquant
+			print("Le rôle everyone peut bien parler dans les channels vocaux")
 
 Exemple d'utilisation
 ~~~~~~~~~~~~~~~~~~~~~
@@ -345,49 +353,44 @@ pour kick :
 
 .. code-block:: python
 
-    from Piscord import Bot, Permission
+	@bot.event
+	def on_message(message):
+		mes = message.content.split()
+		# On récupère le contenu du message, qu'on sépare en liste de mot
 
-    bot = Bot("Token")
+		if mes[0] == "!kick":
+			role_id = message.author.roles
+			# On récupère la liste des ids des rôles de l'auteur
+			guild_roles = message.guild.roles
+			# On récupère la liste des rôles du serveur
+			perm = False
 
-    @bot.event
-    def on_message(message):
-        mes = message.content.split()
-        # On récupère le contenu du message, qu'on sépare en liste de mot
+			for i in guild_roles:
+			# On parcourt la liste des rôles de la guild
+				if i.id in role_id:
+				# Si le rôle i a le même id qu'un des rôles de l'auteur
+					if i.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
+					# On vérifie si le rôle en question à les perms pour kick (admin ou kick)
 
-        if mes[0] == "!kick":
-            role_id = message.author.roles
-            # On récupère la liste des ids des rôles de l'auteur
-            guild_roles = message.guild.roles
-            # On récupère la liste des rôles du serveur
-            perm = False
-            # Booléen vérifiant si il a les permissions
-            for i in guild_roles:
-            # On parcourt la liste des rôles de la guild
-                if i.id in role_id:
-                # Si le rôle i a le même id qu'un des rôles de l'auteur
-                    if i.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
-                    # On vérifie si le rôle en question à les perms pour kick (admin ou kick)
-                        perm = True
-                        # Alors on passe le booléen à True
-                        break
-                        # Et on casse la boucle
-            if perm:
-                if len(message.mentions):
-                # On vérifie si un user à été mentionné
-                    member = message.mentions[0]
-                    # On récupère la première mentions du message
-                    client.get_element(message.guild.members, id=member.id).kick()
-                    # On récupère l'objet Member correspndantà la mention et on kick le membre
-                    message.channel.send(f"{message.mentions[0]} has been kicked")
-                    # On envoie un message de confirmation
-                else:
-                    message.channel.send("You have to mentions a member")
-                    # Si il n'y a pas de mention, il renvoie un message demandant de mentionner
-            else:
-                message.channel.send("You do not have the permissions")
+						perm = True
+						break
+
+			if perm:
+				if len(message.mentions):
+					# On vérifie si un user à été mentionné
+                    
+					member = message.mentions[0]
+					bot.get_element(message.guild.members, id=member.id).kick()
+					# On récupère l'objet Member correspondant à la mention et on kick le membre
+
+					message.channel.send(f"{message.mentions[0]} has been kicked")
+				else:
+					message.channel.send("You have to mentions a member")
+			else:
+				message.channel.send("You do not have the permissions")
 
 Quelques opérateurs sur les Permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Comme vu dans l'exemple précédent, il existe plusieurs opérateur
 permettant de faire des vérifications de permissions. Il en existe
@@ -396,8 +399,8 @@ Reprenons l'exemple plus haut :
 
 .. code-block:: python
 
-    if role.permissions == Permission.KICK_MEMBERS + Permission.ADMINISTRATORS:
-        ...
+	if role.permissions == Permission.KICK_MEMBERS + Permission.ADMINISTRATORS:
+		...
 
 Ici, grâce à l'opérateur ``+`` et ``==``, on peut vérifier si le les
 permissions du role voulu sont bien ``KICK_MEMBERS`` et
@@ -413,14 +416,14 @@ Par exemple :
 
 .. code-block:: python
 
-    if role.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
-        ...
+	if role.permissions in (Permission.KICK_MEMBERS, Permission.ADMINISTRATORS):
+		...
 
 Ici, on va vérifier si le rôle voulu possède au moins la permission ``KICK_MEMBERS`` ou ``ADMINISTRATORS``.
 
 
 Les Overwrites
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 L'objet Overwrite permet, comme son nom l'indique, de réecrire les
 permissions de quelque chose, comme un membre, un rôle, ou un channel.
@@ -436,20 +439,89 @@ voulu
 
 .. code-block:: python
 
-    # Admettons être dans l'event on_message
+	# Admettons être dans l'event on_message
 
-    perms = message.channel.permission_overwrites[0]
-    # On récupère l'Overwrite du channel
+	perms = message.channel.permission_overwrites[0]
+	# On récupère l'Overwrite du channel
 
-    allow = perms.allow - Permission.SEND_MESSAGE
-    # On définit les permissions autorisées, ici toutes les permissions du channel, en enlevant celle de parler
+	allow = perms.allow - Permission.SEND_MESSAGE
+	# On définit les permissions autorisées, ici toutes les permissions du channel, en enlevant celle de parler
 
-    deny = perms.deny + Permission.SEND_MESSAGE
-    # On définit les permissions interdites, ici toutes les permissions du channel, en ajoutant celle de parler
+	deny = perms.deny + Permission.SEND_MESSAGE
+	# On définit les permissions interdites, ici toutes les permissions du channel, en ajoutant celle de parler
 
-    perms.edit(allow=allow, deny=deny)
-    # Enfin, on applique les changement au channel en utilisant la méthode edit de l'objet Overwrite
+	perms.edit(allow=allow, deny=deny)
+	# Enfin, on applique les changement au channel en utilisant la méthode edit de l'objet Overwrite
 
 Ici, dans la variable ``allow``, on peut voir que l'on fait une soustraction de 2 permissions.
 Ainsi, on récupère la valeur des permissions du rôle @everyone,
 et on y soustrait la permission ``Permission.SEND_MESSAGES`` pour enfin appliquer les changements.
+
+Les Commandes
+-------------
+
+Présentation du Handler
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Par défaut, on crée des commandes avec piscord en détectant un message spécifique,
+comme !ping ou n'importe quoi du genre. Seulement, il y a un outil pour simplifier
+la création de commandes : Le Handler. Le Handler est un outil qui va récupérer l'event
+on_message et l'utiliser pour y trouver la commande que l'on souhaite et la rediriger
+automatiquement vers la fonction correspondante.
+
+Comment l'utilise-t-on ?
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+	from piscord import Handler
+
+	bot = Handler("Token","Prefix")
+
+	@bot.command
+	def ping(message):
+		message.channel.send("Pong !")
+
+	bot.run()
+
+Que fait ce bout de code ?
+
+Il crée un bot qui est géré par le Handler, et avec un certain prefix,
+ce qui va permettre de créer des commandes, ce qu'il fait juste en-dessous
+avec le @bot.command. Le nom de la fonction après est le nom de la commande.
+Cela sera détecter quand on fera la commande et renverra à la fonction.
+
+Par exemple, si le prefix est "!", le bot réagira à !ping.
+
+Load et Unload de Commandes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Vous pouvez mettre vos commandes dans des fichiers exterieur et les load et unload a volonté.
+
+Pour cela, mettez tout vos fichiers de commande dans un dossier ``commands/``. Ensuite, dans
+votre fichier de bot, vous avez juste a utiliser ``bot.load_module("Name")`` et ``bot.unload_module("Name")``
+
+Voici ce que cela pourrais donner:
+
+.. code-block:: python
+
+	from piscord import Handler
+
+	bot = Handler("Token","Prefix")
+
+	@bot.event
+	def on_ready(ctx):
+		bot.load_module("moderation") # Load le fichier présent à commands/moderation.py
+		bot.load_module("economy") # Load le fichier présent à commands/economy.py
+
+	@bot.command
+	def unload_mod(message):
+		bot.unload_module("moderation")
+
+	bot.run()
+
+.. caution:: Petites précisions
+
+	Vous ne pouvez pas définir d'event ou load/unload un module dans un fichier.
+	De plus, utilisez dedans ``bot`` pour définir vos commandes, c'est celui
+	mis en place pour que la commande puisse bien s'unload.

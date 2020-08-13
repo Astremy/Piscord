@@ -1,5 +1,6 @@
 import aiohttp
 import json
+from .Permission import Perm
 
 class Cache:
 	def __init__(self, func):
@@ -211,7 +212,7 @@ class Guild:
 		self.discovery_splash = guild.get("discovery_splash")
 		self.owner = guild.get("owner")
 		self.owner_id = guild.get("owner_id")
-		self.permissions = guild.get("permissions")
+		self.permissions = Perm(guild.get("permissions",0))
 		self.region = guild.get("region")
 		self.afk_channel_id = guild.get("afk_channel_id")
 		self.afk_timeout = guild.get("afk_timeout")
@@ -235,7 +236,7 @@ class Guild:
 		self.unavailable = guild.get("unavailable")
 		self.member_count = guild.get("member_count")
 		self.voice_states = guild.get("voice_states")
-		self.members = [Member(member,bot) for member in guild.get("members",[])]
+		self.members = [Member({**member,"guild_id":self.id},bot) for member in guild.get("members",[])]
 		self.channels = [Channel(channel,bot,guild=self) for channel in guild.get("channels",[])]
 		self.presences = guild.get("presences",[]) # To Do
 		self.max_presences = guild.get("max_presences",25000)
@@ -445,6 +446,8 @@ class Channel:
 		timestamp when the last pinned message was pinned
 	invites: :class:`Invite`
 		List of channel invites
+	mention:
+		The mention of the channel
 	guild: :class:`Guild`
 		The guild of the channel
 	"""
@@ -470,6 +473,8 @@ class Channel:
 		self.last_pin_timestamp = channel.get("last_pin_timestamp")
 		self.invites = channel.get("invites",[])
 		self.__bot = bot
+
+		self.mention = f"<#{self.id}>"
 
 		if guild:
 			self.guild = guild
@@ -1075,6 +1080,8 @@ class Role:
 		If the role can be mentionned
 	guild_id:
 		The id of the role guild
+	mention:
+		The mention of the role
 	guild:
 		The role guild
 	"""
@@ -1085,11 +1092,13 @@ class Role:
 		self.color = role.get("color")
 		self.hoist = role.get("hoist")
 		self.position = role.get("position")
-		self.permissions = role.get("permissions")
+		self.permissions = Perm(role.get("permissions",0))
 		self.managed = role.get("managed")
 		self.mentionable = role.get("mentionable")
 		self.guild_id = role.get("guild_id")
 		self.__bot = bot
+
+		self.mention = f"<@&{self.id}>"
 
 		self.guild = bot.get_element(bot.guilds,id=self.guild_id)
 
@@ -1425,7 +1434,7 @@ class Ban:
 
 	def __init__(self,ban,bot):
 		self.reason = ban.get("reason")
-		self.user = User(ban["user"])
+		self.user = User(ban["user"],bot)
 		self.__bot = bot
 
 	def pardon(self, guild_id):
@@ -1456,8 +1465,8 @@ class Overwrite(API_Element):
 	def __init__(self,overwrite,bot,channel_id):
 		self.id = overwrite.get("id")
 		self.type = overwrite.get("type")
-		self.allow = overwrite.get("allow")
-		self.deny = overwrite.get("deny")
+		self.allow = Perm(overwrite.get("allow",0))
+		self.deny = Perm(overwrite.get("deny",0))
 		self.channel_id = channel_id
 		self.__bot = bot
 
