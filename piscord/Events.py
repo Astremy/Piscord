@@ -19,7 +19,7 @@ class Events:
 			def __init__(self, bot, data):
 				Guild.__init__(self, data, bot)
 
-				guild = bot.get_element(bot.guilds,self.id)
+				guild = bot.get_element(bot.guilds,id=self.id)
 				if guild:
 					bot.guilds.remove(guild)
 				bot.guilds.append(self)
@@ -30,7 +30,7 @@ class Events:
 			def __init__(self, bot, data):
 				Guild.__init__(self, data, bot)
 
-				guild = bot.get_element(bot.guilds,self.id)
+				guild = bot.get_element(bot.guilds,id=self.id)
 				for x,y in self.__dict__.items():
 					if y:
 						setattr(guild,x,y)
@@ -68,11 +68,11 @@ class Events:
 				self.channel_id = data["channel_id"]
 				self.guild_id = data.get("guild_id")
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guild.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 				else:
-					self.channel = bot.get_element(self.private_channels, self.channel_id)
+					self.channel = bot.get_element(self.private_channels, id=self.channel_id)
 
 		@self.def_event("MESSAGE_REACTION_ADD","reaction_add")
 		class Event(Member):
@@ -121,11 +121,11 @@ class Events:
 				self.last_pin_timestamp = data.get("last_pin_timestamp")
 				self.guild_id = data.get("guild_id")
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guild.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 				else:
-					self.channel = bot.get_element(self.private_channels, self.channel_id)
+					self.channel = bot.get_element(self.private_channels, id=self.channel_id)
 
 		@self.def_event("CHANNEL_CREATE","channel_create")
 		class Event(Channel):
@@ -134,7 +134,7 @@ class Events:
 				Channel.__init__(self, data, bot)
 
 				if self.type == 1:
-					if bot.get_element(bot.private_channels, self.id):
+					if bot.get_element(bot.private_channels, id=self.id):
 						bot.set_element(bot.private_channels, self)
 					else:
 						bot.private_channels.append(self)
@@ -155,7 +155,7 @@ class Events:
 			def __init__(self, bot, data):
 				Channel.__init__(self, data, bot)
 
-				self.guild.channels.remove(bot.get_element(self.guild.channels, self.id))
+				self.guild.channels.remove(bot.get_element(self.guild.channels, id=self.id))
 
 		@self.def_event("GUILD_MEMBER_ADD","member_join")
 		class Event(Member):
@@ -180,8 +180,8 @@ class Events:
 				User.__init__(self,data["user"],bot)
 				self.guild_id = data["guild_id"]
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
-				self.guild.members.remove(bot.get_element(self.guild.members, self.id))
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
+				self.guild.members.remove(bot.get_element(self.guild.members, id=self.id))
 
 		@self.def_event("GUILD_ROLE_CREATE","role_create")
 		class Event(Role):
@@ -205,8 +205,8 @@ class Events:
 				self.guild_id = data["guild_id"]
 				self.id = data["role_id"]
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
-				role = bot.get_element(self.guild.roles, self.id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
+				role = bot.get_element(self.guild.roles, id=self.id)
 				for x,y in role.__dict__.items():
 					setattr(self,x,y)
 				self.guild.roles.remove(role)
@@ -219,8 +219,8 @@ class Events:
 				self.channel_id = data["channel_id"]
 				self.guild_id = data.get("guild_id",None)
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
-				self.channel = bot.get_element(self.guild.channels, self.channel_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
+				self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 				self.channel.invites.append(self)
 
 		@self.def_event("INVITE_DELETE","invite_delete")
@@ -231,8 +231,8 @@ class Events:
 				self.channel_id = data["channel_id"]
 				self.guild_id = data.get("guild_id",None)
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
-				self.channel = bot.get_element(self.guild.channels, self.channel_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
+				self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 				for invite in channel.invites:
 					if invite.code == self.code:
 						for x,y in invite.__dict__.items():
@@ -247,7 +247,7 @@ class Events:
 				Ban.__init__(self, data, bot)
 				self.guild_id = data["guild_id"]
 
-				guild = bot.get_element(bot.guilds, self.guild_id)
+				guild = bot.get_element(bot.guilds, id=self.guild_id)
 
 		@self.def_event("GUILD_BAN_REMOVE", "remove_ban")
 		class Event(Ban):
@@ -256,7 +256,7 @@ class Events:
 				Ban.__init__(self, data, bot)
 				self.guild_id = data["guild_id"]
 
-				guild = bot.get_element(bot.guilds, self.guild_id)
+				guild = bot.get_element(bot.guilds, id=self.guild_id)
 
 		@self.def_event("GUILD_EMOJIS_UPDATE", "emojis_update")
 		class Event:
@@ -265,7 +265,7 @@ class Events:
 				self.guild_id = data["guild_id"]
 				self.emojis = [Emoji(emoji) for emoji in data["emojis"]]
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 
 		@self.def_event("GUILD_INTEGRATIONS_UPDATE", "integration_update")
 		class Event:
@@ -273,17 +273,18 @@ class Events:
 			def __init__(self, bot, data):
 				self.guild_id = data["guild_id"]
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 
 		@self.def_event("WEBHOOKS_UPDATE", "webhook_update")
 		class Event:
 
 			def __init__(self, bot, data):
+				print(data)
 				self.guild_id = data["guild_id"]
 				self.channel_id = data["channel_id"]
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
-				self.channel = bot.get_element(self.guild.channels, self.channel_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
+				self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 
 		@self.def_event("TYPING_START", "typing")
 		class Event:
@@ -296,11 +297,11 @@ class Events:
 				if "member" in data:
 					self.member = Member(data["member"],bot)
 
-				self.guild = bot.get_element(bot.guilds, self.guild_id)
+				self.guild = bot.get_element(bot.guilds, id=self.guild_id)
 				if self.guild:
-					self.channel = bot.get_element(self.guild.channels, self.channel_id)
+					self.channel = bot.get_element(self.guild.channels, id=self.channel_id)
 				else:
-					self.channel = bot.get_element(bot.private_channels, self.channel_id)
+					self.channel = bot.get_element(bot.private_channels, id=self.channel_id)
 
 '''
 		@self.def_event("VOICE_STATE_UPDATE","")

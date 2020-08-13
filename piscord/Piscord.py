@@ -31,6 +31,9 @@ class Utility:
 	def get_invite(self, invite_code):
 		return Invite(self.api(f"/invites/{invite_code}","GET", params={"with_counts":"true"}),self)
 
+	def get_webhook(self, webhook_id):
+		return Webhook(self.api(f"/webhooks/{webhook_id}"), self)
+
 class Bot(Thread,Utility,Events):
 
 	def __init__(self,token,api_sleep=0.05):
@@ -44,6 +47,8 @@ class Bot(Thread,Utility,Events):
 		self.api_url="https://discord.com/api"
 		self.events = {}
 		self.in_wait_voices = []
+		self.presence = {"op": 3,"d": {"game":None,"status":None,"afk":False,"since":0}}
+		self.gateway = None
 
 	def def_event(self,event,name):
 		def add_event(function):
@@ -63,10 +68,13 @@ class Bot(Thread,Utility,Events):
 		self.events[arg.__name__] = arg
 		return
 
-	def get_element(self, element, search):
+	def get_element(self, element, **kwargs):
 		try:
 			for x in element:
-				if str(x.id) == str(search):
+				for a,b in kwargs.items():
+					if not (a in x.__dict__ and str(x.__dict__[a]) == str(b)):
+						break
+				else:
 					return x
 			return
 		except:...
@@ -114,7 +122,7 @@ class Bot(Thread,Utility,Events):
 
 	async def __main(self,url):
 		events = self.events_list
-		gateway = Gateway(f"{url}?v=6&encoding=json", self.token)
+		gateway = Gateway(f"{url}?v=7&encoding=json", self.token, presence=self.presence)
 		self.gateway = gateway
 		async for data in gateway.connect():
 			if data["op"] == 0:
@@ -132,20 +140,19 @@ class Bot(Thread,Utility,Events):
 						asyncio.create_task(x.run())
 				self.in_wait_voices = []
 
-	def set_presence(self, presence,**kwargs):
-		payload = {
-			"op": 3,
-			"d": {
-				"game":{
-					"name":presence,
-					"type": 0,
-					"timestamps":{}
-					},
-				"status":kwargs.get("status",None),
-				"afk":False,
-				"since":None
-		}}
-		asyncio.run_coroutine_threadsafe(self.gateway.send(payload),self.gateway.loop)
+	def set_presence(self, presence,type=0,url=None):
+		self.presence["game"] = {
+			"name":presence,
+			"type":type,
+			"url":url
+		}
+		if self.gateway:
+			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
+
+	def set_status(self, status):
+		self.presence["status"]=status
+		if self.gateway:
+			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
 
 	def run(self):
 		self.loop = asyncio.new_event_loop()
