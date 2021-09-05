@@ -18,7 +18,7 @@ class Handler(Bot):
 			command = self.verif_command(message)
 			if command:
 				if command in self.commands:
-					self.commands[command](message)
+					self.commands[command](message, *message.content.split()[1:])
 			if self.on_message:
 				self.on_message(message)
 
