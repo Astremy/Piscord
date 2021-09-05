@@ -188,6 +188,15 @@ class Bot(Thread,Utility,Bot_Element):
 		if self.gateway:
 			asyncio.run_coroutine_threadsafe(self.gateway.send(self.presence),self.gateway.loop)
 
+	@property
+	def latency(self):
+		start = time.time()
+		try:
+			self.api('/')
+		except Error:
+			...
+		return time.time() - start
+
 	def run(self):
 		self.loop = asyncio.new_event_loop()
 		print("Starting Bot")

@@ -109,7 +109,7 @@ def test_channel_attribs(bot_guilds):
 	bot = bot_guilds
 	guild = bot.guilds[0]
 	channel = guild.channels[0]
-	
+
 	assert channel.name == "Salons textuels"
 	assert channel.type == 4
 	assert channel.id == "715273516555174010"
@@ -139,7 +139,7 @@ def test_permissions(bot_guilds):
 	assert perm == Permission.KICK_MEMBERS
 	assert perm != Permission.BAN_MEMBERS
 	assert perm == 8
-	
+
 	assert (perm + Permission.BAN_MEMBERS) == Permission.BAN_MEMBERS
 	perm += Permission.BAN_MEMBERS
 
