@@ -14,3 +14,6 @@ docs/build/
 
 # Test File
 test.py
+
+# .idea/ directory
+.idea/
